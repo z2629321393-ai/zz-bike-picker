@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.invalid/schemas/official-vehicle-reviews.schema.json",
+  "title": "中国大陆具体车型双状态审核账本",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "asOf", "entries"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "asOf": { "type": "string", "format": "date" },
+    "entries": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/reviewEntry" }
+    }
+  },
+  "$defs": {
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manufacturer", "brand", "modelName", "trimName", "modelYear", "modelCode", "approvalRoute", "vehicleClass", "propulsion", "displacementCc"],
+      "properties": {
+        "manufacturer": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "brand": { "type": "string", "minLength": 1, "maxLength": 50 },
+        "modelName": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "trimName": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "modelYear": { "type": "integer", "minimum": 1980, "maximum": 2100 },
+        "modelCode": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{1,39}$" },
+        "approvalRoute": { "enum": ["domestic", "official_import"] },
+        "vehicleClass": {
+          "enum": ["motorcycle", "electric_motorcycle", "electric_bicycle", "non_road", "unknown"]
+        },
+        "propulsion": { "enum": ["ice", "electric", "hybrid", "unknown"] },
+        "displacementCc": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "maximum": 2500
+        }
+      }
+    },
+    "marketEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceTitle", "url", "checkedAt", "modelCode", "scope"],
+      "properties": {
+        "sourceTitle": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "url": { "type": "string", "format": "uri" },
+        "checkedAt": { "type": "string", "format": "date" },
+        "modelCode": { "type": "string", "minLength": 2, "maxLength": 40 },
+        "scope": { "enum": ["china_availability", "global_reference", "historical_reference"] }
+      }
+    },
+    "miitEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceTitle", "url", "checkedAt", "modelCode", "recordType", "referenceId"],
+      "properties": {
+        "sourceTitle": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "url": { "type": "string", "format": "uri" },
+        "checkedAt": { "type": "string", "format": "date" },
+        "modelCode": { "type": "string", "minLength": 2, "maxLength": 40 },
+        "recordType": { "enum": ["domestic_product_announcement", "imported_vehicle_record"] },
+        "referenceId": { "type": "string", "minLength": 2, "maxLength": 120 }
+      }
+    },
+    "cccEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceTitle", "url", "checkedAt", "modelCode", "certificateNumber", "certificateStatus"],
+      "properties": {
+        "sourceTitle": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "url": { "type": "string", "format": "uri" },
+        "checkedAt": { "type": "string", "format": "date" },
+        "modelCode": { "type": "string", "minLength": 2, "maxLength": 40 },
+        "certificateNumber": { "type": "string", "pattern": "^[A-Za-z0-9._-]{8,80}$" },
+        "certificateStatus": { "enum": ["valid", "suspended", "revoked", "expired", "unknown"] }
+      }
+    },
+    "recommendationData": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["category", "priceCny", "seatHeightMm", "curbWeightKg", "abs", "ratedPowerKw", "powerClass"],
+      "properties": {
+        "category": {
+          "type": ["string", "null"],
+          "enum": ["scooter", "adv", "cruiser", "sport", "street", "retro", "offroad", "collector", null]
+        },
+        "priceCny": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["min", "max"],
+          "properties": {
+            "min": { "type": "integer", "minimum": 1 },
+            "max": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "seatHeightMm": { "type": ["integer", "null"], "minimum": 400, "maximum": 1200 },
+        "curbWeightKg": { "type": ["integer", "null"], "minimum": 30, "maximum": 600 },
+        "abs": { "type": ["boolean", "null"] },
+        "ratedPowerKw": { "type": ["number", "null"], "exclusiveMinimum": 0, "maximum": 500 },
+        "powerClass": { "type": ["string", "null"], "enum": ["low", "mid", "high", null] }
+      }
+    },
+    "reviewEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reviewId", "identity", "marketStatus", "roadApprovalStatus", "evidence", "recommendationData", "reviewStatus", "reviewedAt", "reviewer"],
+      "properties": {
+        "reviewId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,79}$" },
+        "identity": { "$ref": "#/$defs/identity" },
+        "marketStatus": {
+          "enum": ["officially_available", "discontinued", "not_introduced", "upcoming", "unknown"]
+        },
+        "roadApprovalStatus": {
+          "enum": ["approved", "not_approved", "unknown"]
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["market", "miit", "ccc"],
+          "properties": {
+            "market": { "type": "array", "items": { "$ref": "#/$defs/marketEvidence" } },
+            "miit": { "type": "array", "items": { "$ref": "#/$defs/miitEvidence" } },
+            "ccc": { "type": "array", "items": { "$ref": "#/$defs/cccEvidence" } }
+          }
+        },
+        "recommendationData": { "$ref": "#/$defs/recommendationData" },
+        "reviewStatus": { "enum": ["pending", "approved", "rejected"] },
+        "reviewedAt": { "type": ["string", "null"], "format": "date" },
+        "reviewer": { "type": ["string", "null"], "minLength": 2, "maxLength": 80 },
+        "notes": { "type": "string", "maxLength": 500 }
+      }
+    }
+  }
+}

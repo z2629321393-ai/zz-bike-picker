@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101b2c">
+  <meta name="description" content="骑不快的ZZ性格选车访谈：按用途、预算、身高、经验、维护意愿、停车环境和持有成本筛选摩托车方向。">
+  <title>骑不快的ZZ｜性格选车访谈 V4</title>
+  <link rel="preload" href="assets/zz-logo.jpeg" as="image">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <header class="topbar">
+    <button class="brand" type="button" data-action="home" aria-label="返回首页">
+      <img src="assets/zz-logo.jpeg" alt="骑不快的ZZ">
+      <span><b>骑不快的ZZ</b><small>大熊说车 · 选车访谈</small></span>
+    </button>
+    <div class="top-actions">
+      <button class="data-pill" id="dataPill" type="button" data-action="data-info">车型库加载中</button>
+      <button class="text-btn" type="button" data-action="restart">重新测试</button>
+    </div>
+  </header>
+
+  <main id="app">
+    <section class="view intro-view is-active" id="introView">
+      <div class="intro-copy">
+        <div class="kicker"><span></span> 不是猜你喜欢，是先排除买错</div>
+        <h1>别急着问哪台车好。<br><em>先把你自己测明白。</em></h1>
+        <p class="intro-lead">像和一个懂机械、懂成本、也知道普通摩友会后悔什么的人聊一遍。先把用途、预算、身高、经验和停车环境说清楚，再给你推荐方向。</p>
+        <div class="feature-row">
+          <span>约3分钟</span><span>12轮访谈</span><span>结果可复制</span><span>可生成3:4海报</span>
+        </div>
+        <div class="intro-actions">
+          <button class="primary-btn" type="button" data-action="start">开始访谈 <span>→</span></button>
+          <button class="secondary-btn is-hidden" id="continueBtn" type="button" data-action="continue">继续上次进度</button>
+        </div>
+        <p class="microcopy">不收手机号，不上传答案。测试结果只保存在当前浏览器。</p>
+      </div>
+
+      <div class="intro-visual" aria-hidden="true">
+        <div class="sun-disc"></div>
+        <div class="road-lines"></div>
+        <div class="poster-card card-back"></div>
+        <div class="poster-card card-front">
+          <div class="poster-head"><span>ZZ选车访谈</span><b>V4</b></div>
+          <img src="assets/zz-logo.jpeg" alt="">
+          <div class="poster-quote">“帅不帅先放一边，<br>你养不养得住？”</div>
+          <div class="poster-tags"><span>用途</span><span>预算</span><span>经验</span><span>停车</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view interview-view" id="interviewView" aria-live="polite">
+      <div class="interview-shell">
+        <aside class="host-panel">
+          <div class="host-topline"><span class="online-dot"></span> ZZ正在帮你排除错误答案</div>
+          <div class="host-avatar-wrap">
+            <img class="host-avatar" src="assets/zz-logo.jpeg" alt="骑不快的ZZ头像">
+            <span class="host-badge">ZZ</span>
+          </div>
+          <div class="speech" id="hostSpeech"></div>
+          <div class="live-profile">
+            <div class="live-profile-title">正在形成的选车画像</div>
+            <div class="profile-chips" id="profileChips"><span class="empty-chip">回答后实时更新</span></div>
+          </div>
+          <div class="host-note">先看真实使用代价，再谈外观和排量。</div>
+        </aside>
+
+        <section class="question-panel">
+          <div class="progress-header">
+            <div><span id="stepLabel">第1轮</span><b id="sectionLabel">核心用途</b></div>
+            <span id="progressNumber">8%</span>
+          </div>
+          <div class="progress-track" id="progressTrack" role="progressbar" aria-label="访谈进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="8"><span id="progressBar"></span></div>
+
+          <article class="question-card" id="questionCard"></article>
+
+          <div class="question-nav">
+            <button class="nav-btn" type="button" data-action="back">← 上一题</button>
+            <span class="keyboard-hint">数字键选择 · Enter继续</span>
+            <button class="nav-btn nav-next" type="button" data-action="next">下一题 →</button>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="view result-view" id="resultView">
+      <div class="result-hero">
+        <div class="result-eyebrow">ZZ选车结论</div>
+        <div class="result-grid">
+          <div>
+            <div class="secondary-type" id="secondaryType"></div>
+            <h2 id="resultType">均衡街车型</h2>
+            <p id="resultDesc"></p>
+            <div class="result-actions">
+              <button class="primary-btn" type="button" data-action="share">复制测试结果</button>
+              <button class="secondary-btn" type="button" data-action="poster">生成3:4海报</button>
+              <button class="ghost-btn" type="button" data-action="restart">重新测试</button>
+            </div>
+          </div>
+          <div class="clarity-ring" id="clarityRing">
+            <div><strong id="clarityValue">78</strong><span>画像清晰度</span></div>
+          </div>
+        </div>
+        <div class="trait-strip" id="traitStrip"></div>
+      </div>
+
+      <div class="result-content">
+        <section class="decision-summary" id="decisionSummary"></section>
+
+        <section class="result-section">
+          <div class="section-heading"><div><span>01</span><h3>双核车型白名单</h3></div><p>只显示完成中国市场、工信部与 CCC 核验的具体版本；白名单为空时不输出型号。</p></div>
+          <div class="vehicle-grid" id="vehicleGrid"></div>
+        </section>
+
+        <section class="decision-grid">
+          <div class="decision-card reality-card">
+            <span class="decision-label">现实冲突</span>
+            <h3>你的答案里，有没有互相打架？</h3>
+            <div id="conflictList"></div>
+          </div>
+          <div class="decision-card avoid-card">
+            <span class="decision-label">反向排除</span>
+            <h3>这些车先别急着碰</h3>
+            <div id="avoidAdvice"></div>
+          </div>
+        </section>
+
+        <section class="result-section">
+          <div class="section-heading"><div><span>02</span><h3>车型倾向分布</h3></div><p>分数接近说明你不是单一人格，需要靠试坐定胜负。</p></div>
+          <div class="score-bars" id="scoreBars"></div>
+        </section>
+
+        <section class="copy-section">
+          <div><span class="decision-label">可直接发给粉丝</span><h3>测试结论文案</h3></div>
+          <pre id="copyText"></pre>
+          <button class="secondary-btn" type="button" data-action="share">复制文案</button>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <dialog class="modal" id="vehicleModal" aria-labelledby="vehicleModalTitle">
+    <button class="modal-close" type="button" data-action="close-modal" aria-label="关闭">×</button>
+    <div id="vehicleModalContent"></div>
+  </dialog>
+
+  <dialog class="modal poster-modal" id="posterModal" aria-labelledby="posterModalTitle">
+    <button class="modal-close" type="button" data-action="close-poster" aria-label="关闭">×</button>
+    <div class="poster-modal-head"><span class="decision-label">3:4结果海报</span><h3 id="posterModalTitle">保存后可以发群、发评论区或做内容互动</h3></div>
+    <canvas id="posterCanvas" role="img" aria-label="结果海报生成中"></canvas>
+    <div class="poster-actions">
+      <button class="primary-btn" type="button" data-action="download-poster">保存PNG</button>
+      <button class="secondary-btn" type="button" data-action="close-poster">关闭</button>
+    </div>
+  </dialog>
+
+  <dialog class="modal data-modal" id="dataModal" aria-labelledby="dataModalTitle">
+    <button class="modal-close" type="button" data-action="close-data" aria-label="关闭">×</button>
+    <span class="decision-label">车型数据状态</span>
+    <h3 id="dataModalTitle">公开车型目录与推荐白名单</h3>
+    <div id="dataModalContent"></div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>

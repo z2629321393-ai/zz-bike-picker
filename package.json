@@ -1,0 +1,19 @@
+{
+  "name": "zz-bike-picker-v4",
+  "version": "4.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "test": "node --test tests/engine.test.mjs tests/scenarios.test.mjs",
+    "test:official-reviews": "node --test tests/official-reviews.test.mjs",
+    "test:scraper": "node --test scrapers/motofan/pipeline.test.mjs",
+    "check:data": "node scripts/check-data.mjs",
+    "check:catalog": "node scripts/check-catalog.mjs",
+    "check:catalog-reviews": "node scripts/check-catalog-reviews.mjs",
+    "check:official-reviews": "node scripts/check-official-reviews.mjs",
+    "catalog:generate": "node scripts/generate-public-catalog.mjs",
+    "check": "node scripts/check-data.mjs && node scripts/check-catalog.mjs && node scripts/check-catalog-reviews.mjs && node scripts/check-official-reviews.mjs && node --test tests/official-reviews.test.mjs && node --test tests/engine.test.mjs tests/scenarios.test.mjs && node --test scrapers/motofan/pipeline.test.mjs",
+    "build": "node scripts/build.mjs"
+  }
+}

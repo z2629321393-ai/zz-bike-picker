@@ -1,0 +1,20 @@
+{
+  "name": "zz-motofan-crawler",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "install-browsers": "playwright install chromium",
+    "crawl": "node crawl-motofan.mjs",
+    "normalize": "node normalize-to-vehicles.mjs",
+    "publish-reviewed": "node publish-reviewed.mjs",
+    "test": "node --test pipeline.test.mjs",
+    "all": "node crawl-motofan.mjs && node normalize-to-vehicles.mjs"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.45.3"
+  }
+}

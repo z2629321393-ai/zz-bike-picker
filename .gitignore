@@ -1,0 +1,7 @@
+node_modules/
+dist/
+data/motofan_raw.json
+data/motofan_details.json
+data/vehicles.motofan.json
+*.log
+.DS_Store
