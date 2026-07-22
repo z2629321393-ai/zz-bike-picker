@@ -1,10 +1,14 @@
-# 车型数据字段
+# 车型数据字段 V6.2
 
 ```js
 {
   source: 'sample | motofan_public_page | brand_official',
   source_id: '来源ID',
-  source_url: '公开来源页面',
+  source_url: '公开车型来源页面',
+  detail_url: '摩托范公开车型详情页（如有）',
+  image_url: '公开车型图片URL',
+  image_source_url: '图片来源页面',
+  searchKeyword: '品牌 + 车型搜索词',
   fetched_at: '采集时间',
   brand: '品牌',
   model: '车型',
@@ -26,31 +30,11 @@
 }
 ```
 
-字段未知时保留 `null` 或空值，不得编造。
+## 数据纪律
 
-## 公开浏览目录（不进入推荐）
-
-`src/catalog.generated.js` 中每条只允许公开以下字段：
-
-```js
-{
-  source_id: '公开来源ID',
-  display_name: '来源车型名',
-  price_min: 10000,
-  price_max: 12000,
-  price_label: '¥10,000–12,000',
-  variant_count: 2,
-  source_url: 'HTTPS公开来源',
-  catalog_status: 'not_introduced | discontinued | upcoming | unquoted | new_listing | public_price',
-  status_label: '面向用户的状态文案',
-  availability_note: '不夸大可买/上牌的说明',
-  road_legal: null,
-  recommendable: false
-}
-```
-
-第三方公开索引不能证明道路准入或当前市场供应，所以 `road_legal` 必须为 `null`，`recommendable` 必须为 `false`。
-
-`src/catalog-reviews.js` 只保存车型族初核摘要：官方名称、市场状态、道路状态、候选工厂型号和一手链接。它不能填写或生成正式推荐资格，也不会被推荐引擎导入。
-
-正式精确车型写入 `data/official-vehicle-reviews.json`，字段和发布门槛以 `data/official-vehicle-reviews.schema.json` 与 `data/OFFICIAL_REVIEW_LEDGER.md` 为准。推荐资格只能由校验器在单一版本、中国大陆官方供应、工信部记录、有效 CCC、参数完整度、证据时效与人工审核全部通过时计算，并生成 `src/vehicles.verified.js`；不得由抓取器或人工直接填写 `recommendable`。
+- 字段未知时保留 `null` 或空值，不得编造。
+- 类别示意图只作为回退图，不得冒充具体车型图片。
+- 聚合车型（例如 `250SR / 450SR / 675SR`）必须使用类别方向图，不得挂某一款具体车型的实拍图。
+- 外部图片必须保留 `image_source_url` 或车型来源页。
+- `status` 必须明确在售、停产/仅二手或不可合法上路；国内库存和上牌条件仍需用户按所在地复核。
+- 指导价不等于实际成交价，平台搜索价格不等于实时最低价。

@@ -17,6 +17,7 @@ import {
   limitPublicText,
   parseMaxDetails,
   parseMoneyRange,
+  sanitizeHttpsImageUrl,
   sanitizeDetailRecord,
   sanitizeListRecord
 } from './pipeline-core.mjs';
@@ -178,6 +179,44 @@ async function collectDetailPage(page, item, config) {
   const data = await page.evaluate(() => {
     const text = (document.body?.innerText || '').replace(/\s+/g, ' ').trim();
     const title = document.querySelector('h1,h2,h3,h4')?.innerText?.trim() || '';
+    const absoluteUrl = (value) => {
+      try {
+        return new URL(String(value || '').trim(), location.href).href;
+      } catch {
+        return '';
+      }
+    };
+    const metaImage = absoluteUrl(
+      document.querySelector('meta[property="og:image"],meta[name="og:image"],meta[property="twitter:image"],meta[name="twitter:image"]')
+        ?.getAttribute('content')
+    );
+    const titleTokens = title.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((token) => token.length >= 2);
+    const imageCandidates = [...document.querySelectorAll('img')].map((image, index) => {
+      const sources = [
+        image.currentSrc,
+        image.getAttribute('data-src'),
+        image.getAttribute('data-original'),
+        image.getAttribute('data-lazy-src'),
+        image.getAttribute('src'),
+        image.getAttribute('srcset')?.split(',')[0]?.trim().split(/\s+/)[0]
+      ].map((value) => String(value || '').trim()).filter(Boolean);
+      const rawSource = sources.find((value) => !/^(?:data|blob):/i.test(value) && !/placeholder|default/i.test(value)) || sources[0] || '';
+      const src = absoluteUrl(rawSource);
+      const alt = (image.getAttribute('alt') || '').trim();
+      const marker = `${src} ${alt} ${image.className || ''} ${image.parentElement?.className || ''}`.toLowerCase();
+      const width = image.naturalWidth || Number(image.getAttribute('width')) || image.clientWidth || 0;
+      const height = image.naturalHeight || Number(image.getAttribute('height')) || image.clientHeight || 0;
+      const area = width * height;
+      let score = Math.min(area, 2_000_000) / 10_000;
+      if (image.matches('[class*="cover"],[class*="vehicle"],[class*="motor"],[class*="swiper"] img')) score += 160;
+      if (image.closest('[class*="banner"],[class*="gallery"],[class*="photo"],[class*="vehicle"],[class*="motor"],[class*="swiper"]')) score += 120;
+      if (titleTokens.some((token) => alt.toLowerCase().includes(token))) score += 80;
+      if (area === 0) score += Math.max(0, 20 - index / 10);
+      if (/logo|avatar|icon|qrcode|qr-code|二维码|头像|经销商|dealer|advert|\bad\b|placeholder|default/i.test(marker)) score -= 1000;
+      if (/^(?:data|blob):/i.test(src) || (width > 0 && height > 0 && (width < 240 || height < 140))) score -= 1000;
+      return { src, score };
+    }).filter((candidate) => candidate.src && candidate.score > -500);
+    imageCandidates.sort((left, right) => right.score - left.score);
     const priceLine = text.match(/厂商指导价[:：]\s*[¥￥]?\s*[0-9,]+(?:\s*(?:-|–|—|~|至)\s*[¥￥]?\s*[0-9,]+)?|厂商指导价[:：]\s*(?:暂无报价|即将上市)/)?.[0] || '';
     const usedMin = text.match(/二手摩托\s*最低[:：]?\s*[¥￥]\s*([0-9,]+)/)?.[1] || '';
     const ranks = [...text.matchAll(/(人气榜NO\.\d+|口碑榜NO\.\d+)/gi)].map((match) => match[1]).slice(0, 4);
@@ -194,16 +233,22 @@ async function collectDetailPage(page, item, config) {
       usedMin,
       ranks,
       typeKeywords,
-      specFragments
+      specFragments,
+      metaImage,
+      primaryImage: imageCandidates[0]?.src || ''
     };
   });
 
   const fallbackTitle = data.title || item.list_name || '';
   const hTitle = fallbackTitle.match(/#{1,6}\s*([^¥￥]+?)\s*厂商指导价/)?.[1] || fallbackTitle;
   const detailPriceText = data.priceLine || item.price_text || '';
+  const imageUrl = sanitizeHttpsImageUrl(data.metaImage) || sanitizeHttpsImageUrl(data.primaryImage);
 
   return sanitizeDetailRecord({
     ...item,
+    detail_url: item.url,
+    image_url: imageUrl,
+    image_source_url: imageUrl ? item.url : '',
     detail_title: limitPublicText(hTitle.replace(/^#+\s*/, ''), 180),
     detail_price_text: detailPriceText,
     ...parseMoneyRange(detailPriceText),
@@ -237,6 +282,10 @@ export function selectResumeDetails(rows, targets, maxDetails = 0) {
   }
   const selected = [...byId.values()];
   return maxDetails > 0 ? selected.slice(0, maxDetails) : selected;
+}
+
+export function shouldCollectDetailPage(detail, parametersOnly = false) {
+  return !detail || (!parametersOnly && !detail.image_url);
 }
 
 function rethrowIfBlocked(error) {
@@ -322,7 +371,15 @@ export async function main(args = process.argv.slice(2), env = process.env) {
         const existingIndex = details.findIndex((detail) => detail.id === item.id);
         let detail = existingIndex >= 0 ? details[existingIndex] : null;
         if (!detail && parametersOnly) throw new Error(`详情 ${item.id} 尚不存在，不能只补采参数页。`);
-        if (!detail) detail = await collectDetailPage(page, item, config);
+        if (shouldCollectDetailPage(detail, parametersOnly)) {
+          const previous = detail;
+          const refreshed = await collectDetailPage(page, item, config);
+          detail = sanitizeDetailRecord({
+            ...refreshed,
+            specs: previous?.specs || refreshed.specs,
+            parameter_checked: Boolean(previous?.parameter_checked)
+          });
+        }
         if (!detail.parameter_checked) {
           const specs = await collectParameterPage(page, item, config);
           detail = sanitizeDetailRecord({ ...detail, specs, parameter_checked: true });

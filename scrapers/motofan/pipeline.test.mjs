@@ -13,7 +13,8 @@ import {
   extractUniqueParameterSpecs,
   parseMaxDetails,
   parseMoneyRange,
-  sanitizeDetailRecord
+  sanitizeDetailRecord,
+  sanitizeHttpsImageUrl
 } from './pipeline-core.mjs';
 import {
   normalizeBudget,
@@ -21,7 +22,13 @@ import {
   renderGeneratedModule,
   validateReviewedVehicles
 } from './normalize-core.mjs';
-import { createLaunchOptions, ROOT as CRAWL_ROOT, selectResumeDetails, writeRawRecords } from './crawl-motofan.mjs';
+import {
+  createLaunchOptions,
+  ROOT as CRAWL_ROOT,
+  selectResumeDetails,
+  shouldCollectDetailPage,
+  writeRawRecords
+} from './crawl-motofan.mjs';
 import { ROOT as NORMALIZE_ROOT } from './normalize-to-vehicles.mjs';
 import { ROOT as PUBLISH_ROOT } from './publish-reviewed.mjs';
 
@@ -160,6 +167,71 @@ test('详情白名单只保留有限字段和规格片段，清除全文与联�
   assert.ok(serialized.length < 2000);
 });
 
+test('详情页图片只保留安全 HTTPS 地址，并记录规范的图片来源页', () => {
+  const record = sanitizeDetailRecord({
+    id: '12345',
+    url: 'https://m.58moto.com/garage/detail/12345?from=list#gallery',
+    detail_url: 'https://m.58moto.com/garage/detail/12345?tracking=1',
+    image_url: 'https://img.example-cdn.com/moto/12345.webp?width=1200#hero',
+    image_source_url: 'javascript:alert(1)',
+    detail_title: '测试 车型'
+  });
+
+  assert.equal(record.detail_url, 'https://m.58moto.com/garage/detail/12345');
+  assert.equal(record.image_url, 'https://img.example-cdn.com/moto/12345.webp?width=1200');
+  assert.equal(record.image_source_url, record.detail_url);
+  for (const unsafe of [
+    'http://img.example.com/moto.jpg',
+    'https://user:pass@img.example.com/moto.jpg',
+    'https://localhost/moto.jpg',
+    'https://intranet/moto.jpg',
+    'https://127.0.0.1/moto.jpg',
+    'https://192.168.1.9/moto.jpg',
+    'https://[::ffff:127.0.0.1]/moto.jpg',
+    'https://img.example.com:8443/moto.jpg',
+    'data:image/svg+xml;base64,AAAA',
+    'javascript:alert(1)',
+    'https://img.example.com/moto.jpg?phone=13800138000'
+  ]) {
+    assert.equal(sanitizeHttpsImageUrl(unsafe), '', unsafe);
+  }
+});
+
+test('图片与详情链接贯穿待审候选和人工审核发布，仍不带整页正文或 PII', () => {
+  const candidate = normalizeRow(sanitizeDetailRecord({
+    source: 'type:街车',
+    id: '321',
+    url: 'https://m.58moto.com/garage/detail/321',
+    detail_title: '测试 街车 321',
+    detail_price_text: '厂商指导价：¥12,800',
+    detail_text: '座高 780 mm；评论用户 某某；手机 13800138000',
+    image_url: 'https://cdn.example.com/public/321.jpg',
+    image_source_url: 'https://m.58moto.com/garage/detail/321'
+  }));
+
+  assert.equal(candidate.source_url, 'https://m.58moto.com/garage/detail/321');
+  assert.equal(candidate.detail_url, candidate.source_url);
+  assert.equal(candidate.image_url, 'https://cdn.example.com/public/321.jpg');
+  assert.equal(candidate.image_source_url, candidate.detail_url);
+  assert.equal(Object.hasOwn(candidate, 'detail_text'), false);
+  assert.doesNotMatch(JSON.stringify(candidate), /13800138000|评论用户/);
+
+  const approved = { ...candidate, review_status: 'approved' };
+  const generated = renderGeneratedModule([approved]);
+  assert.match(generated, /https:\/\/cdn\.example\.com\/public\/321\.jpg/);
+  assert.match(generated, /image_source_url/);
+  assert.doesNotMatch(generated, /review_status|13800138000|评论用户/);
+
+  assert.throws(
+    () => validateReviewedVehicles([{ ...approved, image_url: 'http://cdn.example.com/321.jpg' }]),
+    /安全的 HTTPS 图片 URL/
+  );
+  assert.throws(
+    () => validateReviewedVehicles([{ ...approved, image_source_url: 'https://m.58moto.com/garage/detail/999' }]),
+    /image_source_url/
+  );
+});
+
 test('价格区间支持单个货币符号，暂无报价保持 null', () => {
   assert.deepEqual(parseMoneyRange('厂商指导价：¥12,980 - 15,980'), {
     price_min: 12980,
@@ -232,6 +304,14 @@ test('MAX_DETAILS 对 resume 后的最终详情总量仍是硬上限', () => {
   const selected = selectResumeDetails([...rows, rows[0]], targets, 2);
   assert.deepEqual(selected.map((row) => row.id), ['1', '2']);
   assert.ok(selected.every((row) => row.parameter_checked));
+});
+
+test('普通续跑会补采旧详情缺失的图片，PARAMETERS_ONLY 不扩大详情请求', () => {
+  assert.equal(shouldCollectDetailPage(null, false), true);
+  assert.equal(shouldCollectDetailPage({ image_url: '' }, false), true);
+  assert.equal(shouldCollectDetailPage({ image_url: 'https://cdn.example.com/moto.jpg' }, false), false);
+  assert.equal(shouldCollectDetailPage({ image_url: '' }, true), false);
+  assert.equal(shouldCollectDetailPage(null, true), true);
 });
 
 test('缺价车型不会变成 [0,0]，cost/power 不会伪装 low', () => {

@@ -1,6 +1,6 @@
 # 摩托范公开车型数据管道
 
-只读取公开页面可见的有限车型字段，不登录、不绕验证码、不破解接口。采集器默认低速、单浏览器串行运行；遇到 HTTP 403/429、验证码、访问限制或登录阻断会立即停止整个 crawl。
+只读取公开页面可见的有限车型字段，不登录、不绕验证码、不破解接口。详情页会优先读取 `og:image`，没有可用值时再从页面主车型图候选中选一张；只保留安全的 HTTPS 图片 URL 和对应公开详情来源页，不下载图片。采集器默认低速、单浏览器串行运行；遇到 HTTP 403/429、验证码、访问限制或登录阻断会立即停止整个 crawl。
 
 输出路径按脚本自身位置解析，不依赖当前工作目录。不过 npm 命令仍应在本目录执行。
 
@@ -74,7 +74,7 @@ npm.cmd run normalize
 
 然后人工逐条检查 `..\..\data\vehicles.motofan.json`：
 
-1. 核对车型名称、来源详情 URL、价格区间、在售状态和规格。
+1. 核对车型名称、`detail_url` / `source_url`、`image_url` / `image_source_url`、价格区间、在售状态和规格；确认图片确实是该具体车型，而不是品牌 Logo、广告、经销商图或其他车型。
 2. 缺少公开价格的记录必须保持 `budget: null`；公开指导价也不能用来猜持有成本、维护、外观或动力，这些字段未知时必须保持 `null`。
 3. 确认没有整页正文、评论用户、手机号、邮箱、微信号或其他联系方式。
 4. 只有确认无误的记录才把 `review_status` 从 `pending` 改为 `approved`；不可靠的记录应修正或删除。
@@ -87,16 +87,16 @@ Set-Location ..\..
 npm.cmd run check
 ```
 
-发布器会再次检查审核状态、来源 URL、价格空值、禁止全文字段和疑似联系方式；任一记录不合格都不会覆盖 `src/vehicles.generated.js`。`npm.cmd run all` 只执行 crawl 与 normalize，不会跳过人工审核自动发布。
+发布器会再次检查审核状态、详情与图片来源 URL、安全 HTTPS 图片 URL、价格空值、禁止全文字段和疑似联系方式；任一记录不合格都不会覆盖 `src/vehicles.generated.js`。`npm.cmd run all` 只执行 crawl 与 normalize，不会跳过人工审核自动发布。
 
 ## 输出
 
 - `data/motofan_raw.json`：去重后的有限列表字段；若结果为 0，不创建或覆盖该文件。
-- `data/motofan_details.json`：有限详情字段、类型提示、三个规格片段和参数页一致值；不保存整个页面正文、完整参数表或链接列表。
-- `data/vehicles.motofan.json`：`normalize` 生成的人工审核候选。
+- `data/motofan_details.json`：有限详情字段、类型提示、三个规格片段、参数页一致值，以及单个安全图片 URL、图片来源详情页和详情链接；不保存整个页面正文、完整参数表或链接列表。
+- `data/vehicles.motofan.json`：`normalize` 生成的人工审核候选，图片和详情来源字段会继续保留供逐条核验。
 - `src/vehicles.generated.js`：仅由 `publish-reviewed --confirm-reviewed` 在审核通过后生成。
 
-恢复旧版 `motofan_details.json` 时，crawl 会先按字段白名单清洗旧记录，移除历史 `detail_text`、链接、经销商文本和其他未使用字段。
+恢复旧版 `motofan_details.json` 时，crawl 会先按字段白名单清洗旧记录，移除历史 `detail_text`、链接列表、经销商文本和其他未使用字段。普通 crawl 会为缺图的旧详情重新读取一次公开详情页；`PARAMETERS_ONLY=1` 不会扩大详情请求。完成后应重新运行 `normalize`，不能让缺少新字段的旧候选绕过校验直接发布。
 
 ## 禁止事项
 

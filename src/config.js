@@ -1,6 +1,6 @@
-export const APP_VERSION = '4.0.0';
-export const DATA_VERSION = '2026-07-16';
-export const STORAGE_KEY = 'zz-bike-picker-v4';
+export const APP_VERSION = '6.2.0';
+export const DATA_VERSION = '2026-07-22';
+export const STORAGE_KEY = 'zz-bike-picker-v6.2';
 
 export const TYPE_LABELS = {
   scooter: {

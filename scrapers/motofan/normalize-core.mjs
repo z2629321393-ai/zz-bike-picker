@@ -3,7 +3,9 @@ import {
   extractTypeKeywords,
   limitPublicText,
   normalizeSpace,
-  parseMoneyRange
+  parseMoneyRange,
+  sanitizeDetailUrl,
+  sanitizeHttpsImageUrl
 } from './pipeline-core.mjs';
 
 const LEVELS = new Set(['low', 'mid', 'high', null]);
@@ -14,7 +16,8 @@ const FORBIDDEN_KEYS = new Set([
   'dealer_text', 'brand_category_raw', 'contact', 'phone', 'email'
 ]);
 const ALLOWED_VEHICLE_KEYS = new Set([
-  'source', 'source_id', 'source_url', 'fetched_at', 'brand', 'model',
+  'source', 'source_id', 'source_url', 'detail_url', 'image_url',
+  'image_source_url', 'fetched_at', 'brand', 'model',
   'display_name', 'type', 'budget', 'price_text', 'seat', 'weight',
   'displacement', 'year', 'status', 'cost', 'maint', 'looks', 'power',
   'tags', 'why', 'warn', 'used_min_price', 'ranks', 'dataQuality',
@@ -24,6 +27,9 @@ const TEXT_LIMITS = {
   source: 40,
   source_id: 64,
   source_url: 500,
+  detail_url: 500,
+  image_url: 1000,
+  image_source_url: 500,
   fetched_at: 40,
   brand: 80,
   model: 160,
@@ -114,11 +120,19 @@ export function normalizeRow(row = {}) {
   const year = Number(String(name).match(/(20\d{2})款/)?.[1] || 0) || null;
   const priceText = limitPublicText(row.detail_price_text || row.price_text || '', 160);
   const explicitNoPrice = /暂无报价|即将上市/.test(priceText);
+  const detailUrl = sanitizeDetailUrl(row.detail_url) || sanitizeDetailUrl(row.url);
+  const imageUrl = sanitizeHttpsImageUrl(row.image_url);
+  const imageSourceUrl = imageUrl
+    ? sanitizeDetailUrl(row.image_source_url) || detailUrl
+    : '';
 
   return {
     source: 'motofan_public_page',
     source_id: limitPublicText(row.id, 64),
-    source_url: limitPublicText(row.url, 500),
+    source_url: detailUrl,
+    detail_url: detailUrl,
+    image_url: imageUrl,
+    image_source_url: imageSourceUrl,
     fetched_at: limitPublicText(row.fetched_at, 40),
     brand: limitPublicText(brandModel.brand || row.brand || '', 80),
     model: limitPublicText(brandModel.model || row.detail_title || name, 160),
@@ -204,6 +218,18 @@ export function validateReviewedVehicles(vehicles) {
     if (seenIds.has(String(vehicle.source_id))) throw new Error(`${label}的 source_id 重复。`);
     seenIds.add(String(vehicle.source_id));
     if (!validateSourceUrl(vehicle.source_url)) throw new Error(`${label}的 source_url 不是规范的摩托范公开详情 URL。`);
+    if (!validateSourceUrl(vehicle.detail_url) || vehicle.detail_url !== vehicle.source_url) {
+      throw new Error(`${label}的 detail_url 必须与规范的摩托范公开来源 URL 一致。`);
+    }
+    const safeImageUrl = sanitizeHttpsImageUrl(vehicle.image_url);
+    if (vehicle.image_url) {
+      if (!safeImageUrl || safeImageUrl !== vehicle.image_url) throw new Error(`${label}的 image_url 不是安全的 HTTPS 图片 URL。`);
+      if (!validateSourceUrl(vehicle.image_source_url) || vehicle.image_source_url !== vehicle.detail_url) {
+        throw new Error(`${label}的 image_source_url 必须指向对应的摩托范公开详情页。`);
+      }
+    } else if (vehicle.image_source_url) {
+      throw new Error(`${label}没有 image_url 时 image_source_url 必须为空。`);
+    }
 
     if (vehicle.budget !== null) {
       const validBudget = Array.isArray(vehicle.budget)

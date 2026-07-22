@@ -7,10 +7,8 @@ import {
   budgetLabel,
   labelFor
 } from './config.js';
-import { CATALOG_META, CATALOG_STATUS, PUBLIC_CATALOG } from './catalog.generated.js';
-import { CATALOG_REVIEW_META, CATALOG_REVIEWS } from './catalog-reviews.js';
-import { DEMO_VEHICLE_META } from './demo-meta.js';
-import { VERIFIED_REVIEW_META, VERIFIED_VEHICLES } from './vehicles.verified.js';
+import { BASE_VEHICLES } from '../data/base-vehicles.js';
+import { MOTOFAN_VEHICLES } from './vehicles.generated.js';
 import {
   analyzeConflicts,
   buildAvoidAdvice,
@@ -25,35 +23,25 @@ import {
 } from './engine.js';
 import { clearState, createInitialState, loadState, saveState } from './storage.js';
 import { downloadCanvas, renderResultPoster } from './poster.js';
+import {
+  ACCESSORY_CATEGORIES,
+  REMINDER_CONFIG,
+  accessoryResultCopy,
+  categoryById,
+  clearAccessorySession,
+  createAccessorySession,
+  evaluateAccessory,
+  loadAccessorySession,
+  saveAccessorySession
+} from './accessories.js';
+import { isAggregateVehicle, marketplaceLinks, motofanLinks, safeGearImage, safeImage } from './marketplace.js';
 
-// 正式结果只允许双状态审核脚本生成的白名单；示例库与第三方候选永不参与用户推荐。
-const VEHICLES = mergeAndNormalizeVehicles(VERIFIED_VEHICLES);
-const VERIFIED_RECOMMENDATION_COUNT = VERIFIED_REVIEW_META.recommendable;
-const CATALOG_REVIEW_BY_ID = new Map(CATALOG_REVIEWS.map((review) => [review.source_id, review]));
-const OFFICIAL_EVIDENCE_STATUSES = new Set([
-  'official_current',
-  'official_family_current',
-  'official_catalog_only',
-  'official_orderable_mismatch',
-  'official_store_current',
-  'successor_current_ambiguous',
-  'superseded_or_ambiguous',
-  'china_mention_only'
-]);
-const CATALOG_OFFICIAL_EVIDENCE_COUNT = CATALOG_REVIEWS.filter((review) =>
-  OFFICIAL_EVIDENCE_STATUSES.has(review.market_status)
-).length;
-const CATALOG_IDENTITY_ISSUE_COUNT = CATALOG_REVIEW_META.reviewed - CATALOG_OFFICIAL_EVIDENCE_COUNT;
-const CATALOG_PAGE_SIZE = 60;
-const catalogState = { query: '', status: 'all', review: 'all', visible: CATALOG_PAGE_SIZE };
+const VEHICLES = mergeAndNormalizeVehicles(BASE_VEHICLES, MOTOFAN_VEHICLES);
 let state = createInitialState();
 let currentResult = null;
 let autoAdvanceTimer = null;
-
-function cancelAutoAdvance() {
-  clearTimeout(autoAdvanceTimer);
-  autoAdvanceTimer = null;
-}
+let accessorySession = loadAccessorySession();
+let currentAccessoryResult = null;
 
 const els = {
   intro: document.getElementById('introView'),
@@ -65,9 +53,9 @@ const els = {
   stepLabel: document.getElementById('stepLabel'),
   sectionLabel: document.getElementById('sectionLabel'),
   progressNumber: document.getElementById('progressNumber'),
-  progressTrack: document.getElementById('progressTrack'),
   progressBar: document.getElementById('progressBar'),
   continueBtn: document.getElementById('continueBtn'),
+  entryGrid: document.getElementById('entryGrid'),
   dataPill: document.getElementById('dataPill'),
   toast: document.getElementById('toast'),
   vehicleModal: document.getElementById('vehicleModal'),
@@ -75,14 +63,53 @@ const els = {
   posterModal: document.getElementById('posterModal'),
   posterCanvas: document.getElementById('posterCanvas'),
   dataModal: document.getElementById('dataModal'),
-  dataModalContent: document.getElementById('dataModalContent')
+  dataModalContent: document.getElementById('dataModalContent'),
+  promo: document.getElementById('promoView'),
+  promoImage: document.getElementById('promoImage'),
+  promoTitle: document.getElementById('promoTitle'),
+  promoText: document.getElementById('promoText'),
+  promoCtaText: document.getElementById('promoCtaText'),
+  promoContinueBtn: document.getElementById('promoContinueBtn'),
+  accessoryHub: document.getElementById('accessoryHubView'),
+  accessoryGrid: document.getElementById('accessoryGrid'),
+  accessoryInterview: document.getElementById('accessoryInterviewView'),
+  accessorySideIcon: document.getElementById('accessorySideIcon'),
+  accessorySideAccent: document.getElementById('accessorySideAccent'),
+  accessorySideTitle: document.getElementById('accessorySideTitle'),
+  accessorySideSubtitle: document.getElementById('accessorySideSubtitle'),
+  accessoryProgressBar: document.getElementById('accessoryProgressBar'),
+  accessoryProgressText: document.getElementById('accessoryProgressText'),
+  accessoryQuestionCard: document.getElementById('accessoryQuestionCard'),
+  accessoryResult: document.getElementById('accessoryResultView'),
+  accessoryResultKicker: document.getElementById('accessoryResultKicker'),
+  accessoryResultHeadline: document.getElementById('accessoryResultHeadline'),
+  accessoryResultSummary: document.getElementById('accessoryResultSummary'),
+  accessoryPriorities: document.getElementById('accessoryPriorities'),
+  accessoryAvoid: document.getElementById('accessoryAvoid'),
+  accessoryChecklist: document.getElementById('accessoryChecklist'),
+  accessoryTradeoffs: document.getElementById('accessoryTradeoffs'),
+  accessoryFeelNote: document.getElementById('accessoryFeelNote'),
+  accessoryStyleNote: document.getElementById('accessoryStyleNote'),
+  accessoryMetrics: document.getElementById('accessoryMetrics'),
+  accessorySpokenLine: document.getElementById('accessorySpokenLine'),
+  accessoryCopyText: document.getElementById('accessoryCopyText'),
+  accessoryMarketImage: document.getElementById('accessoryMarketImage'),
+  accessoryBudgetAdvice: document.getElementById('accessoryBudgetAdvice'),
+  accessoryBrandHints: document.getElementById('accessoryBrandHints'),
+  accessoryPriceWarning: document.getElementById('accessoryPriceWarning'),
+  accessorySearchKeywords: document.getElementById('accessorySearchKeywords'),
+  accessoryMarketLinks: document.getElementById('accessoryMarketLinks')
 };
 
 init();
 
 function init() {
   updateDataPill();
-  syncContinueButton();
+  applyReminderConfig();
+  renderEntryChoices();
+  renderAccessoryHub();
+  const saved = loadState();
+  if (saved && !saved.completed && saved.current > 0) els.continueBtn.classList.remove('is-hidden');
 
   document.addEventListener('click', handleClick);
   document.addEventListener('input', handleInput);
@@ -95,20 +122,21 @@ function init() {
     shared.innerHTML = `<span>分享结果：${escapeHtml(TYPE_LABELS[sharedType].name)}</span>`;
     document.querySelector('.intro-copy .microcopy')?.before(shared);
   }
-
-  window.scrollTo({ top: 0, behavior: 'auto' });
 }
 
 function handleClick(event) {
+  const copyNode = event.target.closest('[data-copy-text]');
+  if (copyNode) {
+    copyPlainText(copyNode.dataset.copyText || '');
+    return;
+  }
+  if (event.target.closest('a[href]')) return;
   const actionNode = event.target.closest('[data-action]');
   if (actionNode) {
     const action = actionNode.dataset.action;
     if (action === 'start') startFresh();
     if (action === 'continue') continueSaved();
-    if (action === 'home') {
-      cancelAutoAdvance();
-      showView('intro');
-    }
+    if (action === 'home') goHome();
     if (action === 'restart') restart();
     if (action === 'back') previousQuestion();
     if (action === 'next') nextQuestion();
@@ -119,10 +147,15 @@ function handleClick(event) {
     if (action === 'close-poster') els.posterModal.close();
     if (action === 'data-info') openDataInfo();
     if (action === 'close-data') els.dataModal.close();
-    if (action === 'load-catalog') {
-      catalogState.visible += CATALOG_PAGE_SIZE;
-      renderCatalogResults();
-    }
+    if (action === 'open-extension') openPromo('hub');
+    if (action === 'promo-continue') continueFromPromo();
+    if (action === 'back-to-result') showView('result');
+    if (action === 'back-to-accessory-hub') openAccessoryHub();
+    if (action === 'reset-accessories') resetAccessories();
+    if (action === 'accessory-back') previousAccessoryQuestion();
+    if (action === 'accessory-next') nextAccessoryQuestion();
+    if (action === 'copy-accessory-result') copyAccessoryResult();
+    if (action === 'accessory-finish') goHome();
     return;
   }
 
@@ -133,7 +166,7 @@ function handleClick(event) {
     state.answers[key] = value;
     saveState(state);
     renderQuestion();
-    cancelAutoAdvance();
+    clearTimeout(autoAdvanceTimer);
     autoAdvanceTimer = setTimeout(() => nextQuestion(true), 420);
     return;
   }
@@ -156,6 +189,29 @@ function handleClick(event) {
     return;
   }
 
+  const entryCategory = event.target.closest('[data-entry-category]');
+  if (entryCategory) {
+    const categoryId = entryCategory.dataset.entryCategory;
+    if (categoryId === 'motorcycle') {
+      startFresh();
+    } else {
+      openPromo(`category:${categoryId}`);
+    }
+    return;
+  }
+
+  const accessoryCategory = event.target.closest('[data-accessory-category]');
+  if (accessoryCategory) {
+    startAccessory(accessoryCategory.dataset.accessoryCategory);
+    return;
+  }
+
+  const accessoryOption = event.target.closest('[data-accessory-option]');
+  if (accessoryOption) {
+    selectAccessoryOption(accessoryOption.dataset.accessoryOption);
+    return;
+  }
+
   const vehicle = event.target.closest('[data-vehicle-id]');
   if (vehicle) openVehicleModal(vehicle.dataset.vehicleId);
 }
@@ -171,21 +227,6 @@ function handleInput(event) {
     saveState(state);
     updateBodyLive();
   }
-  if (event.target.id === 'catalogSearch') {
-    catalogState.query = event.target.value;
-    catalogState.visible = CATALOG_PAGE_SIZE;
-    renderCatalogResults();
-  }
-  if (event.target.id === 'catalogStatus') {
-    catalogState.status = event.target.value;
-    catalogState.visible = CATALOG_PAGE_SIZE;
-    renderCatalogResults();
-  }
-  if (event.target.id === 'catalogReview') {
-    catalogState.review = event.target.value;
-    catalogState.visible = CATALOG_PAGE_SIZE;
-    renderCatalogResults();
-  }
 }
 
 function handleKeys(event) {
@@ -195,22 +236,22 @@ function handleKeys(event) {
     if (els.dataModal.open) els.dataModal.close();
   }
 
-  const answerControl = event.target.closest?.('[data-select],[data-segment],[data-multi]');
-  if (answerControl && (event.key === 'Enter' || event.key === ' ')) {
+  const typingTarget = event.target instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName);
+  if (!typingTarget && event.key.toLowerCase() === 'u' && !els.accessoryInterview?.classList.contains('is-active')) {
     event.preventDefault();
-    answerControl.click();
+    openAccessoryHub();
     return;
   }
-
-  const vehicle = event.target.closest?.('[data-vehicle-id]');
-  if (vehicle && (event.key === 'Enter' || event.key === ' ')) {
-    event.preventDefault();
-    openVehicleModal(vehicle.dataset.vehicleId);
-    return;
+  if (els.accessoryInterview?.classList.contains('is-active')) {
+    if (event.key === 'Enter') { event.preventDefault(); nextAccessoryQuestion(); return; }
+    if (event.key === 'ArrowLeft') { event.preventDefault(); previousAccessoryQuestion(); return; }
+    if (/^[1-9]$/.test(event.key)) {
+      const cards = [...els.accessoryQuestionCard.querySelectorAll('[data-accessory-option]')];
+      cards[Number(event.key) - 1]?.click();
+      return;
+    }
   }
-
   if (!els.interview.classList.contains('is-active')) return;
-  if (event.target.closest?.('button,input,select,textarea')) return;
   if (event.key === 'Enter') {
     event.preventDefault();
     nextQuestion();
@@ -226,17 +267,13 @@ function handleKeys(event) {
 }
 
 function startFresh() {
-  cancelAutoAdvance();
   state = createInitialState();
   saveState(state);
   showView('interview');
   renderQuestion();
-  window.scrollTo({ top: 0, behavior: 'auto' });
-  focusCurrentQuestion();
 }
 
 function continueSaved() {
-  cancelAutoAdvance();
   state = loadState() || createInitialState();
   state.answers = {
     ...DEFAULT_ANSWERS,
@@ -245,12 +282,10 @@ function continueSaved() {
   };
   showView('interview');
   renderQuestion();
-  window.scrollTo({ top: 0, behavior: 'auto' });
-  focusCurrentQuestion();
 }
 
 function restart() {
-  cancelAutoAdvance();
+  clearTimeout(autoAdvanceTimer);
   clearState();
   state = createInitialState();
   currentResult = null;
@@ -260,20 +295,25 @@ function restart() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+function goHome() {
+  renderEntryChoices();
+  showView('intro');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function showView(name) {
-  [els.intro, els.interview, els.result].forEach((element) => element.classList.remove('is-active'));
-  ({ intro: els.intro, interview: els.interview, result: els.result })[name].classList.add('is-active');
-  if (name === 'intro') syncContinueButton();
-}
-
-function syncContinueButton() {
-  const saved = loadState();
-  const canContinue = Boolean(saved && !saved.completed && (saved.current > 0 || saved.answers?.usage));
-  els.continueBtn.classList.toggle('is-hidden', !canContinue);
-}
-
-function focusCurrentQuestion() {
-  els.questionCard.querySelector('.question-title')?.focus({ preventScroll: true });
+  [els.intro, els.interview, els.result, els.promo, els.accessoryHub, els.accessoryInterview, els.accessoryResult]
+    .forEach((element) => element?.classList.remove('is-active'));
+  const target = ({
+    intro: els.intro,
+    interview: els.interview,
+    result: els.result,
+    promo: els.promo,
+    accessoryHub: els.accessoryHub,
+    accessoryInterview: els.accessoryInterview,
+    accessoryResult: els.accessoryResult
+  })[name];
+  target?.classList.add('is-active');
 }
 
 function renderQuestion() {
@@ -283,7 +323,6 @@ function renderQuestion() {
   els.sectionLabel.textContent = question.section;
   els.progressNumber.textContent = `${progress}%`;
   els.progressBar.style.width = `${progress}%`;
-  els.progressTrack.setAttribute('aria-valuenow', String(progress));
   els.hostSpeech.innerHTML = getHostSpeech(question.id);
   updateProfileChips();
 
@@ -299,7 +338,7 @@ function renderQuestion() {
 
   els.questionCard.innerHTML = `
     <div class="question-eyebrow">${escapeHtml(question.eyebrow)}</div>
-    <h2 class="question-title" tabindex="-1">${escapeHtml(question.title)}</h2>
+    <h2 class="question-title">${escapeHtml(question.title)}</h2>
     <p class="question-help">${escapeHtml(question.help)}</p>
     ${renderer(question)}
   `;
@@ -313,7 +352,7 @@ function renderQuestion() {
 function renderSingle(question) {
   const selected = state.answers[question.id];
   return `<div class="option-grid">${question.options.map((option, index) => `
-    <button class="option-card ${String(selected) === String(option.value) ? 'is-selected' : ''}" type="button" data-select="${escapeHtml(question.id)}" data-value="${escapeHtml(option.value)}" aria-pressed="${String(selected) === String(option.value)}">
+    <button class="option-card ${String(selected) === String(option.value) ? 'is-selected' : ''}" type="button" data-select="${escapeHtml(question.id)}" data-value="${escapeHtml(option.value)}">
       <span class="option-icon">${escapeHtml(option.icon)}</span>
       <span class="option-main"><b>${escapeHtml(option.label)}</b><small>${escapeHtml(option.detail)}</small></span>
       <span class="option-key">${index + 1}</span>
@@ -383,7 +422,7 @@ function renderMulti() {
   ];
 
   return `<div class="option-grid">${options.map((option, index) => `
-    <button class="option-card ${state.answers.avoid.includes(option.value) ? 'is-selected' : ''}" type="button" data-multi="avoid" data-value="${option.value}" aria-pressed="${state.answers.avoid.includes(option.value)}">
+    <button class="option-card ${state.answers.avoid.includes(option.value) ? 'is-selected' : ''}" type="button" data-multi="avoid" data-value="${option.value}">
       <span class="option-icon">${option.icon}</span>
       <span class="option-main"><b>${option.label}</b><small>${option.detail}</small></span>
       <span class="option-key">${index + 1}</span>
@@ -397,7 +436,7 @@ function controlCard(key, title, description, options) {
     <h4>${escapeHtml(title)}</h4>
     <p>${escapeHtml(description)}</p>
     <div class="segmented four">${options.map(([value, label]) => `
-      <button class="segment ${state.answers[key] === value ? 'is-selected' : ''}" type="button" data-segment="${key}" data-value="${value}" aria-pressed="${state.answers[key] === value}">${label}</button>
+      <button class="segment ${state.answers[key] === value ? 'is-selected' : ''}" type="button" data-segment="${key}" data-value="${value}">${label}</button>
     `).join('')}</div>
   </div>`;
 }
@@ -457,11 +496,6 @@ function updateProfileChips() {
 }
 
 function nextQuestion(auto = false) {
-  if (auto) {
-    autoAdvanceTimer = null;
-  } else {
-    cancelAutoAdvance();
-  }
   const question = QUESTIONS[state.current];
   if (!isQuestionComplete(question)) {
     if (!auto) showToast('先回答这一题');
@@ -472,8 +506,6 @@ function nextQuestion(auto = false) {
     state.current += 1;
     saveState(state);
     renderQuestion();
-    window.scrollTo({ top: 0, behavior: 'auto' });
-    focusCurrentQuestion();
     return;
   }
 
@@ -483,13 +515,11 @@ function nextQuestion(auto = false) {
 }
 
 function previousQuestion() {
-  cancelAutoAdvance();
+  clearTimeout(autoAdvanceTimer);
   if (state.current <= 0) return;
   state.current -= 1;
   saveState(state);
   renderQuestion();
-  window.scrollTo({ top: 0, behavior: 'auto' });
-  focusCurrentQuestion();
 }
 
 function isQuestionComplete(question) {
@@ -507,13 +537,15 @@ function buildResult() {
   const avoidAdvice = buildAvoidAdvice(answers, ranking.primary);
   const clarity = calculateClarity(ranking.sortedTypes, conflicts, ranking.recommendations.length);
   const decisionProfile = buildDecisionProfile(answers, ranking.primary, ranking.secondary);
-  const copyText = buildCopyText({
+  const copyText = `${buildCopyText({
     answers,
     primary: ranking.primary,
     secondary: ranking.secondary,
     recommendations: ranking.recommendations,
     conflicts
-  });
+  })}
+
+顺便念一句：${REMINDER_CONFIG.spokenLine}`;
 
   currentResult = {
     answers,
@@ -537,13 +569,7 @@ function buildResult() {
     ? ranking.recommendations.map((item, index) => vehicleCard(item, index)).join('')
     : noVehicleCard();
   document.getElementById('conflictList').innerHTML = renderAdvice(conflicts.length ? conflicts : ['你的主要答案没有明显打架，下一步重点是试坐、当地落地价和售后。'], conflicts.length ? '' : 'ok');
-  const specificExclusions = ranking.excluded.slice(0, 3).map((item) => (
-    `${item.vehicle.brand}｜${item.vehicle.model}：${item.hardBlocks[0]}`
-  ));
-  document.getElementById('avoidAdvice').innerHTML = renderAdvice(
-    [...specificExclusions, ...avoidAdvice].slice(0, 5),
-    'bad'
-  );
+  document.getElementById('avoidAdvice').innerHTML = renderAdvice(avoidAdvice, 'bad');
   renderScoreBars(ranking.sortedTypes);
   setText('copyText', copyText);
 
@@ -558,11 +584,19 @@ function vehicleCard(item, index) {
     TYPE_LABELS[vehicle.type]?.short || '待分类',
     formatPrice(vehicle.budget),
     vehicle.seat ? `座高${vehicle.seat}mm` : '座高待校准',
-    vehicle.weight ? `${vehicle.weight}kg` : '车重待校准'
+    vehicle.weight ? `${vehicle.weight}kg` : '车重待校准',
+    availabilityLabel(vehicle)
   ];
+  const source = motofanLinks(vehicle);
+  const image = safeImage(vehicle);
+  const isPublicPhoto = !isAggregateVehicle(vehicle) && /^https:\/\//i.test(image);
 
   return `<article class="vehicle-card" data-vehicle-id="${escapeHtml(vehicle.id)}" tabindex="0" role="button" aria-label="查看${escapeHtml(vehicle.brand)}${escapeHtml(vehicle.model)}详情">
-    <div class="vehicle-rank">试坐方向 ${String(index + 1).padStart(2, '0')}</div>
+    <div class="vehicle-image-wrap">
+      <img src="${escapeHtml(image)}" alt="${escapeHtml(vehicle.brand)} ${escapeHtml(vehicle.model)}" loading="lazy" onerror="this.src='assets/vehicles/${escapeHtml(vehicle.type)}.svg'">
+      <span>${isPublicPhoto ? '公开页面车型图 · 请复核来源' : '车型方向示意图 · 非具体实拍'}</span>
+    </div>
+    <div class="vehicle-rank">RECOMMEND ${String(index + 1).padStart(2, '0')}</div>
     <h4>${escapeHtml(vehicle.brand)}｜${escapeHtml(vehicle.model)}</h4>
     <div class="vehicle-tags">
       ${specs.map((spec) => `<span>${escapeHtml(spec)}</span>`).join('')}
@@ -570,15 +604,19 @@ function vehicleCard(item, index) {
     </div>
     <div class="reason-list">${item.reasons.slice(0, 3).map((reason) => `<span>${escapeHtml(reason)}</span>`).join('')}</div>
     <p><b>现实代价：</b>${escapeHtml(item.warnings[0] || vehicle.warn)}</p>
+    <div class="vehicle-source-actions">
+      ${source.direct ? `<a class="mini-link primary" href="${escapeHtml(source.direct)}" target="_blank" rel="noopener noreferrer">摩托范看图和参数</a>` : `<a class="mini-link primary" href="${escapeHtml(source.search)}" target="_blank" rel="noopener noreferrer">搜索摩托范资料</a>`}
+      <a class="mini-link" href="${escapeHtml(source.search)}" target="_blank" rel="noopener noreferrer">继续查车型</a>
+    </div>
     <div class="match-line"><span>点击查看完整解释</span><strong>${item.score}</strong></div>
   </article>`;
 }
 
 function noVehicleCard() {
   return `<article class="vehicle-card">
-    <div class="vehicle-rank">VERIFIED LIST EMPTY</div>
-    <h4>当前没有通过双重核验的具体车型</h4>
-    <p><b>建议：</b>先按结果页的车型大类了解骑姿和用途，暂时不要把任何具体型号当成下单或上牌结论。</p>
+    <div class="vehicle-rank">NO CLEAR MATCH</div>
+    <h4>当前没有足够可靠的精确匹配</h4>
+    <p><b>建议：</b>先按结果页的车型大类去试坐。车型库数据不完整时，系统不会硬装成“精确推荐”。</p>
   </article>`;
 }
 
@@ -631,19 +669,30 @@ function openVehicleModal(id) {
   const item = currentResult?.recommendations.find((candidate) => candidate.vehicle.id === id);
   if (!item) return;
   const vehicle = item.vehicle;
+  const source = motofanLinks(vehicle);
+  const image = safeImage(vehicle);
   els.vehicleModalContent.innerHTML = `<div class="modal-body">
     <span class="decision-label">匹配度 ${item.score} · 数据可信度 ${item.confidence}</span>
-    <h3 id="vehicleModalTitle">${escapeHtml(vehicle.brand)}｜${escapeHtml(vehicle.model)}</h3>
+    <div class="vehicle-modal-media">
+      <img src="${escapeHtml(image)}" alt="${escapeHtml(vehicle.brand)} ${escapeHtml(vehicle.model)}" onerror="this.src='assets/vehicles/${escapeHtml(vehicle.type)}.svg'">
+      <div><h3>${escapeHtml(vehicle.brand)}｜${escapeHtml(vehicle.model)}</h3><p>图片用于识别车型方向；公开图和参数仍以来源页及品牌官网为准。</p></div>
+    </div>
     <div class="vehicle-tags">
       <span>${escapeHtml(TYPE_LABELS[vehicle.type].short)}</span>
       <span>${escapeHtml(formatPrice(vehicle.budget))}</span>
       <span>${vehicle.seat ? `座高${vehicle.seat}mm` : '座高待校准'}</span>
       <span>${vehicle.weight ? `${vehicle.weight}kg` : '车重待校准'}</span>
+      <span>${escapeHtml(availabilityLabel(vehicle))}</span>
       <span class="quality">${escapeHtml(dataQualityLabel(vehicle.dataQuality))}</span>
     </div>
     <div class="modal-section"><h4>为什么进入名单</h4><div class="modal-list">${item.reasons.map((reason) => `<div>${escapeHtml(reason)}</div>`).join('')}</div></div>
     <div class="modal-section"><h4>现实代价</h4><div class="modal-list">${item.warnings.map((warning) => `<div>${escapeHtml(warning)}</div>`).join('') || `<div>${escapeHtml(vehicle.warn)}</div>`}</div></div>
-    <div class="modal-section"><h4>数据状态</h4><p>${escapeHtml(vehicle.status)}。${vehicle.year ? `年款/发布时间参考：${vehicle.year}。` : '年款信息待补充。'}${vehicle.sourceUrl ? ' 已保留公开来源链接用于人工核验。' : ' 当前为基础示例数据。'}</p></div>
+    <div class="modal-section"><h4>继续核验</h4><p>${escapeHtml(vehicle.status)}。${vehicle.year ? `年款/发布时间参考：${vehicle.year}。` : '年款信息待补充。'}图片、指导价、实际成交价和在售状态都可能变化，请再到公开来源与当地经销商核验。</p>
+      <div class="market-link-row">
+        ${source.direct ? `<a class="market-link primary" href="${escapeHtml(source.direct)}" target="_blank" rel="noopener noreferrer">摩托范车型页</a>` : ''}
+        <a class="market-link" href="${escapeHtml(source.search)}" target="_blank" rel="noopener noreferrer">搜索摩托范：${escapeHtml(source.keyword)}</a>
+      </div>
+    </div>
   </div>`;
   els.vehicleModal.showModal();
 }
@@ -668,118 +717,283 @@ async function copyResult() {
 async function openPoster() {
   if (!currentResult) return;
   await renderResultPoster(els.posterCanvas, currentResult, 'assets/zz-logo.jpeg');
-  const names = currentResult.recommendations.slice(0, 3).map((item) => `${item.vehicle.brand}${item.vehicle.model}`).join('、');
-  els.posterCanvas.setAttribute('aria-label', `${TYPE_LABELS[currentResult.primary].name}结果海报。优先试坐：${names || '暂无精确车型'}。`);
   els.posterModal.showModal();
 }
 
 function openDataInfo() {
-  const explicitlyUnavailable = CATALOG_META.status_counts.not_introduced + CATALOG_META.status_counts.discontinued;
-  catalogState.visible = CATALOG_PAGE_SIZE;
+  const quality = VEHICLES.reduce((accumulator, vehicle) => {
+    accumulator[vehicle.dataQuality] = (accumulator[vehicle.dataQuality] || 0) + 1;
+    return accumulator;
+  }, {});
   els.dataModalContent.innerHTML = `
     <div class="data-stats">
-      <div class="data-stat"><strong>${CATALOG_META.total}</strong><span>公开两轮车型索引记录</span></div>
-      <div class="data-stat"><strong>${explicitlyUnavailable}</strong><span>明确停售或大陆未引进</span></div>
-      <div class="data-stat"><strong>${CATALOG_REVIEW_META.reviewed}</strong><span>已完成人工一手检索初核</span></div>
-      <div class="data-stat is-warning"><strong>${VERIFIED_RECOMMENDATION_COUNT}</strong><span>已完成双重核验的具体版本</span></div>
+      <div class="data-stat"><strong>${VEHICLES.length}</strong><span>当前可用车型记录</span></div>
+      <div class="data-stat"><strong>${MOTOFAN_VEHICLES.length}</strong><span>公开页生成记录</span></div>
+      <div class="data-stat"><strong>${quality.verified || 0}</strong><span>已校准记录</span></div>
     </div>
-    <div class="catalog-alert" role="note">
-      <strong>先说清楚：目录 ≠ 已核验可买 ≠ 推荐。</strong>
-      <span>正式推荐池目前只有 ${VEHICLES.length} 个双核具体版本。另有 ${DEMO_VEHICLE_META.total} 条合并示例只用于开发与算法测试，不会加载到生产推荐或打包进部署成品。下面 ${CATALOG_META.total} 条两轮索引可能混有电动自行车、非道路和历史车型，只用于查漏；公开指导价不能证明现在有货或当地能上牌。</span>
-    </div>
-    <div class="modal-section"><h4>核验规则</h4><div class="modal-list">
-      <div>道路准入看工信部公告与 CCC；市场可买看品牌中国官网、官方订购/询价和授权渠道。两项必须分开核。</div>
-      <div>来源明确写“停售”“大陆未引进”“即将上市”的车型不会进入当前新车推荐。</div>
-      <div>无手续、非正规进口、报废、拼装及纯赛道/非道路车型永久排除；同名正规官方进口车型要按具体车辆手续判断。</div>
-      <div>已优先初核：新车上市 ${CATALOG_REVIEW_META.status_counts.new_listing} 条、即将上市 ${CATALOG_REVIEW_META.status_counts.upcoming} 条、暂无报价 ${CATALOG_REVIEW_META.status_counts.unquoted} 条，共 ${CATALOG_REVIEW_META.reviewed} 条；目前 ${VERIFIED_RECOMMENDATION_COUNT} 条完成具体版本准入闭环。初核日期：${escapeHtml(CATALOG_REVIEW_META.as_of)}。</div>
-      <div>索引快照：${escapeHtml(CATALOG_META.snapshot_date)}｜App ${APP_VERSION}｜数据口径 ${DATA_VERSION}</div>
+    <div class="modal-section"><h4>数据原则</h4><div class="modal-list">
+      <div>推荐引擎与车型数据分离。换数据不需要重写访谈逻辑。</div>
+      <div>基础示例库只保证网站能演示，不假装是完整全网数据库。</div>
+      <div>公开页记录会显示可信度；缺少座高、车重、年款时会主动提示。</div>
+      <div>版本：App ${APP_VERSION}｜数据口径 ${DATA_VERSION}</div>
     </div></div>
-    <section class="catalog-browser" aria-labelledby="catalogBrowserTitle">
-      <div class="catalog-heading">
-        <div><h4 id="catalogBrowserTitle">公开两轮车型索引</h4><p>${escapeHtml(CATALOG_META.source_name)}，车型类别未核实前不会冒充摩托车，每条都保留来源链接。</p></div>
-        <a href="${escapeHtml(CATALOG_META.source_home)}" target="_blank" rel="noopener noreferrer">查看来源站</a>
-      </div>
-      <div class="catalog-toolbar">
-        <label><span>搜索品牌或车型</span><input id="catalogSearch" type="search" value="${escapeHtml(catalogState.query)}" placeholder="例如：本田、450MT、踏板" autocomplete="off"></label>
-        <label><span>状态筛选</span><select id="catalogStatus">
-          <option value="all">全部状态（${CATALOG_META.total}）</option>
-          ${Object.entries(CATALOG_STATUS).map(([key, item]) => `<option value="${key}"${catalogState.status === key ? ' selected' : ''}>${escapeHtml(item.label)}（${CATALOG_META.status_counts[key]}）</option>`).join('')}
-        </select></label>
-        <label><span>一手来源核验</span><select id="catalogReview">
-          <option value="all"${catalogState.review === 'all' ? ' selected' : ''}>全部核验进度</option>
-          <option value="reviewed"${catalogState.review === 'reviewed' ? ' selected' : ''}>已初核（${CATALOG_REVIEW_META.reviewed}）</option>
-          <option value="official_evidence"${catalogState.review === 'official_evidence' ? ' selected' : ''}>中国官网/渠道有相关内容，不等于在售（${CATALOG_OFFICIAL_EVIDENCE_COUNT}）</option>
-          <option value="identity_issue"${catalogState.review === 'identity_issue' ? ' selected' : ''}>名称/渠道存在问题（${CATALOG_IDENTITY_ISSUE_COUNT}）</option>
-          <option value="unreviewed"${catalogState.review === 'unreviewed' ? ' selected' : ''}>尚未初核（${CATALOG_META.total - CATALOG_REVIEW_META.reviewed}）</option>
-        </select></label>
-      </div>
-      <p class="catalog-count" id="catalogCount" aria-live="polite"></p>
-      <div class="catalog-results" id="catalogResults"></div>
-      <div class="catalog-more" id="catalogMore"></div>
-    </section>
   `;
-  renderCatalogResults();
   els.dataModal.showModal();
 }
 
-function getFilteredCatalog() {
-  const query = catalogState.query.trim().toLocaleLowerCase('zh-CN');
-  return PUBLIC_CATALOG.filter((row) => {
-    if (catalogState.status !== 'all' && row.catalog_status !== catalogState.status) return false;
-    const review = CATALOG_REVIEW_BY_ID.get(row.source_id);
-    if (catalogState.review === 'reviewed' && !review) return false;
-    if (catalogState.review === 'unreviewed' && review) return false;
-    if (catalogState.review === 'official_evidence' && (!review || !OFFICIAL_EVIDENCE_STATUSES.has(review.market_status))) return false;
-    if (catalogState.review === 'identity_issue' && (!review || OFFICIAL_EVIDENCE_STATUSES.has(review.market_status))) return false;
-    if (!query) return true;
-    return `${row.display_name} ${row.price_label} ${row.status_label} ${review?.official_name || ''} ${review?.summary || ''}`.toLocaleLowerCase('zh-CN').includes(query);
-  });
-}
-
-function renderCatalogResults() {
-  const results = document.getElementById('catalogResults');
-  const count = document.getElementById('catalogCount');
-  const more = document.getElementById('catalogMore');
-  if (!results || !count || !more) return;
-
-  const filtered = getFilteredCatalog();
-  const visible = filtered.slice(0, catalogState.visible);
-  count.textContent = `找到 ${filtered.length} 条；当前显示 ${visible.length} 条。所有记录默认不进入推荐。`;
-  results.innerHTML = visible.length ? visible.map((row) => {
-    const review = CATALOG_REVIEW_BY_ID.get(row.source_id);
-    return `
-    <article class="catalog-row">
-      <div class="catalog-row-main">
-        <div class="catalog-row-title"><strong>${escapeHtml(row.display_name)}</strong>${review ? '<span class="catalog-review-badge">一手初核：暂不推荐</span>' : ''}<span class="catalog-status is-${escapeHtml(row.catalog_status)}">索引标注：${escapeHtml(row.status_label)}</span></div>
-        ${review ? renderCatalogReview(review) : `<p>${escapeHtml(row.availability_note)}</p>`}
-      </div>
-      <div class="catalog-row-meta">
-        <strong class="catalog-index-price">${escapeHtml(row.price_label)}</strong>
-        <span>第三方索引参考价｜${row.variant_count ? `${row.variant_count} 个公开款型` : '款型数待核'}｜道路准入待核</span>
-        <a href="${escapeHtml(row.source_url)}" target="_blank" rel="noopener noreferrer">来源详情 ↗</a>
-      </div>
-    </article>
-  `;
-  }).join('') : '<div class="catalog-empty">没有匹配记录。可以换一个车型名或状态。</div>';
-  more.innerHTML = filtered.length > visible.length
-    ? `<button class="secondary-btn" type="button" data-action="load-catalog">再显示 ${Math.min(CATALOG_PAGE_SIZE, filtered.length - visible.length)} 条</button>`
-    : '';
-}
-
-function renderCatalogReview(review) {
-  const codes = review.model_codes.length ? `候选型号：${review.model_codes.join('、')}` : '具体工厂型号未核实';
-  const links = review.evidence.length
-    ? review.evidence.map((item) => `<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.label)} ↗</a>`).join('')
-    : '<span>暂未找到允许范围内的一手公开页面</span>';
-  return `
-    <div class="catalog-review-summary"><strong>${escapeHtml(review.official_name)}</strong><p>${escapeHtml(review.summary)}</p></div>
-    <div class="catalog-review-state"><span>市场：${escapeHtml(review.market_label)}</span><span>准入：${escapeHtml(review.road_label)}</span><span>${escapeHtml(codes)}</span></div>
-    <div class="catalog-review-links">${links}</div>
-  `;
-}
-
 function updateDataPill() {
-  els.dataPill.textContent = `公开索引 ${CATALOG_META.total} 条 · 正式可推荐 ${VERIFIED_RECOMMENDATION_COUNT}`;
+  const generated = MOTOFAN_VEHICLES.length;
+  els.dataPill.textContent = generated ? `车型库 ${VEHICLES.length} 条 · 公开页${generated}` : `车型库 ${VEHICLES.length} 条 · 示例模式`;
+}
+
+
+function renderEntryChoices() {
+  if (!els.entryGrid) return;
+  const motorcycleCard = `
+    <button class="entry-card entry-card-main" type="button" data-entry-category="motorcycle">
+      <span class="entry-card-icon">车</span>
+      <span class="entry-card-copy"><b>摩托车选择推荐</b><small>12轮访谈：用途、预算、身高、经验、成本和停车环境</small></span>
+      <span class="entry-card-status">开始选车 →</span>
+    </button>`;
+  const gearCards = ACCESSORY_CATEGORIES.map((category) => {
+    const completed = Boolean(accessorySession.resultsByCategory?.[category.id]);
+    return `
+      <button class="entry-card ${completed ? 'is-complete' : ''}" type="button" data-entry-category="${escapeHtml(category.id)}">
+        <span class="entry-card-icon">${escapeHtml(category.icon)}</span>
+        <span class="entry-card-copy"><b>${escapeHtml(category.title)}</b><small>${escapeHtml(category.subtitle)}</small></span>
+        <span class="entry-card-status">${completed ? '已测过 · 可重测' : '只测这一项 →'}</span>
+      </button>`;
+  }).join('');
+  els.entryGrid.innerHTML = motorcycleCard + gearCards;
+}
+
+function applyReminderConfig(category = null) {
+  if (els.promoImage) els.promoImage.src = REMINDER_CONFIG.promoImage;
+  const categoryName = category?.title?.replace('如何选', '') || '装备';
+  setText('promoTitle', category ? `先看一张提醒，再开始${categoryName}测试` : REMINDER_CONFIG.promoTitle);
+  setText('promoText', category ? `${category.subtitle}这一轮只做${categoryName}，不会要求你继续完成其他项目。` : REMINDER_CONFIG.promoText);
+  setText('promoCtaText', REMINDER_CONFIG.spokenLine);
+  setText('accessorySpokenLine', REMINDER_CONFIG.spokenLine);
+  if (els.promoContinueBtn) els.promoContinueBtn.textContent = category ? `下一步，开始${categoryName}测试 →` : '下一步，进入单项选择 →';
+}
+
+function openPromo(next = 'hub') {
+  accessorySession.promoNext = next;
+  saveAccessorySession(accessorySession);
+  const categoryId = next.startsWith('category:') ? next.slice('category:'.length) : null;
+  applyReminderConfig(categoryById(categoryId));
+  showView('promo');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function continueFromPromo() {
+  const next = accessorySession.promoNext || 'hub';
+  if (next === 'result') {
+    showView('accessoryResult');
+    return;
+  }
+  if (next.startsWith('category:')) {
+    startAccessory(next.slice('category:'.length));
+    return;
+  }
+  openAccessoryHub();
+}
+
+function openAccessoryHub() {
+  renderAccessoryHub();
+  showView('accessoryHub');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderAccessoryHub() {
+  if (!els.accessoryGrid) return;
+  els.accessoryGrid.innerHTML = ACCESSORY_CATEGORIES.map((category, index) => {
+    const completed = Boolean(accessorySession.resultsByCategory?.[category.id]);
+    return `<button class="accessory-card ${completed ? 'is-complete' : ''}" type="button" data-accessory-category="${escapeHtml(category.id)}">
+      <span class="accessory-card-index">${String(index + 1).padStart(2, '0')}</span>
+      <span class="accessory-card-icon">${escapeHtml(category.icon)}</span>
+      <span class="accessory-card-copy"><b>${escapeHtml(category.title)}</b><small>${escapeHtml(category.subtitle)}</small></span>
+      <span class="accessory-card-status">${completed ? '已完成 · 可重测' : '开始测试 →'}</span>
+    </button>`;
+  }).join('');
+}
+
+function resetAccessories() {
+  clearAccessorySession();
+  accessorySession = createAccessorySession();
+  currentAccessoryResult = null;
+  renderAccessoryHub();
+  showToast('扩展包记录已重置');
+}
+
+function startAccessory(categoryId) {
+  const category = categoryById(categoryId);
+  if (!category) return;
+  accessorySession.currentCategoryId = categoryId;
+  accessorySession.currentQuestion = 0;
+  accessorySession.answersByCategory[categoryId] = {};
+  saveAccessorySession(accessorySession);
+  renderAccessoryQuestion();
+  showView('accessoryInterview');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderAccessoryQuestion() {
+  const category = categoryById(accessorySession.currentCategoryId);
+  if (!category) return openAccessoryHub();
+  const question = category.questions[accessorySession.currentQuestion];
+  const answers = accessorySession.answersByCategory[category.id] || {};
+  const selected = answers[question.id];
+  const progress = Math.round(((accessorySession.currentQuestion + 1) / category.questions.length) * 100);
+
+  setText('accessorySideIcon', category.icon);
+  setText('accessorySideAccent', category.accent);
+  setText('accessorySideTitle', category.title);
+  setText('accessorySideSubtitle', category.subtitle);
+  els.accessoryProgressBar.style.width = `${progress}%`;
+  setText('accessoryProgressText', `第${accessorySession.currentQuestion + 1}题 / 共${category.questions.length}题`);
+
+  els.accessoryQuestionCard.innerHTML = `
+    <div class="question-eyebrow">${escapeHtml(category.title)}</div>
+    <h2 class="question-title">${escapeHtml(question.title)}</h2>
+    <p class="question-help">${escapeHtml(question.help)}</p>
+    <div class="option-grid">${question.options.map(([value, label, detail], index) => `
+      <button class="option-card ${selected === value ? 'is-selected' : ''}" type="button" data-accessory-option="${escapeHtml(value)}">
+        <span class="option-icon">${index + 1}</span>
+        <span class="option-main"><b>${escapeHtml(label)}</b><small>${escapeHtml(detail)}</small></span>
+        <span class="option-key">${index + 1}</span>
+      </button>`).join('')}</div>`;
+
+  const back = document.querySelector('[data-action="accessory-back"]');
+  const next = document.querySelector('[data-action="accessory-next"]');
+  if (back) back.disabled = accessorySession.currentQuestion === 0;
+  if (next) next.textContent = accessorySession.currentQuestion === category.questions.length - 1 ? '生成建议 →' : '下一题 →';
+}
+
+function selectAccessoryOption(value) {
+  const category = categoryById(accessorySession.currentCategoryId);
+  if (!category) return;
+  const question = category.questions[accessorySession.currentQuestion];
+  const answers = accessorySession.answersByCategory[category.id] || {};
+  answers[question.id] = value;
+  accessorySession.answersByCategory[category.id] = answers;
+  saveAccessorySession(accessorySession);
+  renderAccessoryQuestion();
+}
+
+function previousAccessoryQuestion() {
+  if (accessorySession.currentQuestion <= 0) return;
+  accessorySession.currentQuestion -= 1;
+  saveAccessorySession(accessorySession);
+  renderAccessoryQuestion();
+}
+
+function nextAccessoryQuestion() {
+  const category = categoryById(accessorySession.currentCategoryId);
+  if (!category) return;
+  const question = category.questions[accessorySession.currentQuestion];
+  const answers = accessorySession.answersByCategory[category.id] || {};
+  if (!answers[question.id]) {
+    showToast('先回答这一题');
+    return;
+  }
+  if (accessorySession.currentQuestion < category.questions.length - 1) {
+    accessorySession.currentQuestion += 1;
+    saveAccessorySession(accessorySession);
+    renderAccessoryQuestion();
+    return;
+  }
+  buildAccessoryResult(category);
+}
+
+function buildAccessoryResult(category) {
+  const answers = accessorySession.answersByCategory[category.id] || {};
+  const result = evaluateAccessory(category.id, answers, currentResult);
+  const copyText = accessoryResultCopy(category, result);
+  currentAccessoryResult = { category, answers, result, copyText };
+  accessorySession.resultsByCategory[category.id] = { answers, result, updatedAt: new Date().toISOString() };
+  saveAccessorySession(accessorySession);
+
+  setText('accessoryResultKicker', `${category.title} · ZZ建议`);
+  setText('accessoryResultHeadline', result.headline);
+  setText('accessoryResultSummary', result.summary);
+  els.accessoryPriorities.innerHTML = renderAccessoryList(result.priorities);
+  els.accessoryTradeoffs.innerHTML = renderAccessoryList(result.tradeoffs);
+  els.accessoryAvoid.innerHTML = renderAccessoryList(result.avoid);
+  els.accessoryChecklist.innerHTML = renderAccessoryList(result.checklist);
+  setText('accessoryFeelNote', result.feelNote);
+  setText('accessoryStyleNote', result.styleNote);
+  setText('accessorySpokenLine', result.spokenLine);
+  els.accessoryMetrics.innerHTML = renderAccessoryMetrics(result.metrics);
+  renderAccessoryMarket(category, result);
+  setText('accessoryCopyText', copyText);
+  renderAccessoryHub();
+  renderEntryChoices();
+  showView('accessoryResult');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderAccessoryMarket(category, result) {
+  const keyword = result.searchKeywords?.[0] || result.headline;
+  const links = marketplaceLinks(keyword);
+  if (els.accessoryMarketImage) {
+    els.accessoryMarketImage.src = safeGearImage(category.id, result);
+    els.accessoryMarketImage.alt = `${category.title}推荐方向图`;
+  }
+  setText('accessoryBudgetAdvice', result.budgetAdvice || '预算建议待补充');
+  setText('accessoryPriceWarning', result.priceWarning || '价格提醒待补充');
+  if (els.accessoryBrandHints) els.accessoryBrandHints.innerHTML = renderAccessoryList(result.brandHints || []);
+  if (els.accessorySearchKeywords) {
+    els.accessorySearchKeywords.innerHTML = (result.searchKeywords || []).map((item) => `<button class="search-keyword" type="button" data-copy-text="${escapeHtml(item)}">${escapeHtml(item)}</button>`).join('');
+  }
+  if (els.accessoryMarketLinks) {
+    const references = (result.referenceLinks || []).map((item) => `<a class="market-link reference" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.label)}</a>`);
+    const markets = links.map((item) => `<a class="market-link ${item.id === 'jd' ? 'primary' : ''}" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.label)}</a>`);
+    els.accessoryMarketLinks.innerHTML = [...references, ...markets].join('');
+  }
+}
+
+function renderAccessoryList(items) {
+  return `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+}
+
+function availabilityLabel(vehicle = {}) {
+  const status = String(vehicle.status || '');
+  if (/水车|报废|无手续|不上路|纯摆件|仅内容/.test(status)) return '国内不可合法上路';
+  if (/停产|收藏/.test(status)) return '国内新车通常买不到 · 仅二手/收藏';
+  if (/在售/.test(status)) return '国内在售方向 · 库存需复核';
+  return '国内可购状态待复核';
+}
+
+function renderAccessoryMetrics(metrics = []) {
+  return metrics.map((item) => `<div class="gear-metric"><div><b>${escapeHtml(item.label)}</b><span>${Number(item.value) || 0}</span></div><div class="gear-metric-bar"><i style="width:${Math.max(0, Math.min(100, Number(item.value) || 0))}%"></i></div></div>`).join('');
+}
+
+async function copyPlainText(text) {
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast(`已复制：${text}`);
+  } catch (_) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.append(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    textarea.remove();
+    showToast(`已复制：${text}`);
+  }
+}
+
+async function copyAccessoryResult() {
+  const text = currentAccessoryResult?.copyText || els.accessoryCopyText?.textContent?.trim();
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('装备建议已复制');
+  } catch {
+    showToast('浏览器禁止自动复制，请手动复制');
+  }
 }
 
 function setText(id, value) {

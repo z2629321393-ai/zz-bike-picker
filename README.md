@@ -1,26 +1,84 @@
-# 骑不快的ZZ｜性格选车访谈 V4
+# 骑不快的ZZ｜选车与装备单项测试 V6.2
 
-V4不是继续堆问题，而是把V3升级成一个可维护、可解释、可扩展的选车产品原型。
+V6.2在V6.1“每次只测试一个项目”的基础上，新增了**结果图片、车型公开来源、摩托范核验入口、装备预算建议、品牌方向、搜索词和京东/淘宝/天猫比价入口**。
 
-## 本版解决了什么
+## 正确流程
 
-- 保留“一题一屏”的访谈交互，不改回长表单。
-- 由10轮扩展为12轮，新增骑行经验、通勤距离和停车环境。
-- 推荐逻辑与车型数据彻底分离。
-- 每台推荐车型都会给出：匹配理由、现实代价、硬性排除原因、数据可信度。
-- 新增3:4结果海报。
-- 新增车型详情弹窗。
-- 新增数据状态面板，不再把不完整数据假装成精确结果。
-- 新增 1,482 条脱敏公开两轮车型索引，可搜索并按停售、未引进、即将上市等状态筛选；其中可能包含电动自行车、非道路和历史车型，未经分类核验永不自动进入推荐。
-- 已优先初核 23 条：13 条“新车上市”、5 条“即将上市”、5 条“暂无报价”；页面会分开显示市场证据、道路准入证据、车型类别和阻断原因，当前 0 条进入正式推荐。
-- 基础示例、第三方候选与正式推荐池已严格隔离；没有通过双状态账本的具体版本时，结果只给车型方向，不输出未核验型号。
-- 加入新手、预算、座高、车重、停车和老车年限的硬过滤。
-- 使用 Node 自带测试；主站不需要前端依赖，公开数据采集器要求 Node 18+。
-- 当前自动测试共 56 项：正式账本 15 项、推荐/场景 23 项、采集管道 18 项。
+```text
+进入首页
+→ 用户主动选择一个项目
+   ├─ 摩托车选择推荐
+   ├─ 头盔
+   ├─ 手套
+   ├─ 骑行服/护具
+   ├─ 骑行靴
+   ├─ 三箱
+   ├─ 射灯
+   ├─ 蓝牙耳机
+   └─ 防盗/盗抢保障
+→ 只完成所选项目
+→ 查看图片、建议、搜索词与核验入口
+→ 返回项目选择
+```
 
-## 直接运行
+不会要求用户把所有项目全部做完。
+
+## V6.2新增内容
+
+### 摩托车结果
+
+- 车型卡片支持显示真实公开页图片。
+- 摩托范采集器会尝试提取公开详情页的 `og:image` 或主要车型图片。
+- 有摩托范详情页时，显示“摩托范看图和参数”。
+- 没有详情页时，提供“搜索摩托范资料”。
+- 没有真实车型图时，显示本地车型类别方向图，不冒充具体车型。
+- 图片、指导价、成交价、年款和在售状态均提示再次核验。
+
+### 装备结果
+
+八个装备类目都会显示：
+
+- 方向示意图
+- 真实使用感
+- 外观搭配
+- 预算建议
+- 品牌/产品方向
+- 价格底线提醒
+- 可复制电商搜索词
+- 京东、淘宝、天猫平台搜索入口
+
+这些入口只打开平台搜索页，不是商品直购链接，也不代表实时最低价。
+
+### 头盔补充
+
+- 1000以内、1000—2500、2500—5000、5000以上分别给预算建议。
+- 预算紧时，把赛羽作为入门候选之一。
+- 明确提醒：太便宜的不建议；先核对现行标准、合头、扣具、镜片和售后，再谈壳体材料和花色。
+- 不按品牌名直接判安全，具体型号仍需核对。
+
+### 手套补充
+
+继续保留四类：
+
+- 轻量城市型
+- 街道运动型
+- 旅行防护型
+- 赛道长护腕型
+
+结果继续明确比较：防护、舒适、握持感、通风和美观。赛道手套会提示更紧、更硬、更热以及可能出现的“握屎感”；街道运动型强调更自然的刹车、油门和离合反馈。
+
+## 图片规则
+
+- `assets/vehicles/`：车型类别本地方向图。
+- `assets/gear/`：装备类别本地方向图。
+- 摩托范采集后的真实图片URL会写入车型数据字段 `image_url`。
+- 真实图加载失败时，自动回退到本地方向图。
+- 不得把类别示意图标注成具体车型实拍图。
+
+## 运行
 
 ```bash
+npm run check
 npm run dev
 ```
 
@@ -30,96 +88,25 @@ npm run dev
 http://127.0.0.1:4173
 ```
 
-## 检查项目
-
-```bash
-npm run check
-```
-
-## 生成可部署目录
+## 构建
 
 ```bash
 npm run build
 ```
 
-生成的 `dist/` 可部署到GitHub Pages、Vercel或Netlify。
+部署目录：`dist/`
 
-## 目录结构
+## 摩托范公开数据试跑
 
-```text
-index.html
-styles.css
-assets/
-data/
-  base-vehicles.js
-  official-vehicle-reviews.json
-  official-vehicle-reviews.schema.json
-  OFFICIAL_REVIEW_LEDGER.md
-src/
-  app.js
-  catalog.generated.js
-  catalog-reviews.js
-  config.js
-  demo-meta.js
-  engine.js
-  poster.js
-  storage.js
-  vehicles.generated.js
-  vehicles.verified.js
-scripts/
-  serve.mjs
-  build.mjs
-  check-data.mjs
-  check-catalog.mjs
-  check-catalog-reviews.mjs
-  check-official-reviews.mjs
-  generate-public-catalog.mjs
-tests/
-  engine.test.mjs
-  official-reviews.test.mjs
-  scenarios.test.mjs
-scrapers/motofan/
-  pipeline.test.mjs
-AGENTS.md
-CODEX_PROMPT.md
-CATALOG_COVERAGE.md
-NEW_LISTING_AUDIT_2026-07-17.md
-UPCOMING_UNQUOTED_AUDIT_2026-07-17.md
-GITHUB_PAGES_DEPLOY.md
-.github/workflows/pages.yml
+```bash
+cd scrapers/motofan
+npm install
+npm run install-browsers
+MAX_DETAILS=30 npm run crawl
+npm run normalize
+cd ../..
+npm run check
+npm run build
 ```
 
-## 车型数据策略
-
-`data/base-vehicles.js` 是基础示例库，只用于开发和算法场景测试，不进入正式用户推荐，也不会复制进 `dist/`。生产界面只读取 `src/demo-meta.js` 中的示例数量说明。
-
-`src/catalog.generated.js` 是从 1,482 条公开两轮索引生成的脱敏浏览目录。索引可能包含电动自行车、摩托车、非道路和历史车型；它只保留车型名、公开参考价、状态提示、款型数与来源链接，全部固定为 `recommendable: false`，不会传入推荐引擎。当前已完成车型分类、道路准入与官方市场供应核验的具体版本仍为 0；完整口径见 `CATALOG_COVERAGE.md`。
-
-`src/catalog-reviews.js` 保存车型族初核摘要，只用于把来源名称纠错、官方页面、候选工厂型号和缺证原因展示给用户，不会进入推荐引擎。首批 13 条见 `NEW_LISTING_AUDIT_2026-07-17.md`，第二批 10 条见 `UPCOMING_UNQUOTED_AUDIT_2026-07-17.md`。
-
-`data/official-vehicle-reviews.json` 才是精确到单一版本的正式双状态账本。校验器会核对中国大陆官方供应、工信部记录、有效 CCC、证据时效、推荐参数和人工复核，并生成 `src/vehicles.verified.js`。主站只从这个生成模块读取具体推荐车型；任何未显式生成 `recommendable: true` 的记录都会被引擎默认阻断。
-
-摩托范公开页采用“采集 → 待审核候选 → 人工逐条审核 → 显式发布”的安全流程：
-
-```text
-data/motofan_raw.json
-data/motofan_details.json
-data/vehicles.motofan.json（全部初始为 pending）
-```
-
-`normalize-to-vehicles.mjs` 只生成候选，不会修改前端。只有逐条核对来源、价格、车型类别、年款、规格和在售状态，并将可靠记录标为 `approved` 后，才可运行：
-
-```powershell
-Set-Location .\scrapers\motofan
-npm.cmd run publish-reviewed -- --confirm-reviewed
-```
-
-发布器只会把人工整理后的第三方候选写入 `src/vehicles.generated.js`，供继续查证和算法测试；它仍不具备正式推荐资格。只有再拆成单一版本并完成正式双状态账本闭环的记录，才会进入 `src/vehicles.verified.js`。未经审核的 raw、details 和 pending 文件不会被复制进 `dist/`。
-
-## 重要说明
-
-- 本测试用于内容互动和选车初筛，不替代试坐、试骑、当地落地价、车况检测、手续核验、保险和当地法规确认。
-- 老车年限过滤是保守启发式判断，实际应以登记日期和当地规定为准。
-- 无手续水车、报废车不进入日常上路推荐。
-- 公开指导价不等于当地成交价；未知的车型类别、持有成本、维护、动力、年款或规格必须保留为空，不能靠价格或弱关键词猜测。
-- GitHub Pages 已配好自动检查与构建工作流，首次上传和后续更新见 `GITHUB_PAGES_DEPLOY.md`。
+采集器只读取公开页面，不登录、不绕验证码、不高并发。页面结构变化后可能需要调整选择器。

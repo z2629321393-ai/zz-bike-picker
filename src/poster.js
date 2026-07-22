@@ -43,7 +43,7 @@ export async function renderResultPoster(canvas, result, logoUrl) {
   ctx.fillText('骑不快的ZZ', 215, 130);
   ctx.font = '700 22px system-ui, sans-serif';
   ctx.fillStyle = '#667085';
-  ctx.fillText('性格选车访谈 · V4', 215, 169);
+  ctx.fillText('选车与装备单项测试 · V6.2.0', 215, 169);
 
   pill(ctx, 645, 95, 150, 52, '#101b2c', '#ffffff', '选车结论');
 
@@ -106,11 +106,7 @@ export async function renderResultPoster(canvas, result, logoUrl) {
   ctx.fillText('ZZ现实提醒', 95, 1080);
   ctx.fillStyle = '#5a6473';
   ctx.font = '700 21px system-ui, sans-serif';
-  const reminder = result.conflicts?.[0]
-    || recs[0]?.warnings?.[0]
-    || recs[0]?.reasons?.[0]
-    || '别只问哪台车最好。用途、预算和你愿意承担的代价，比参数表更重要。';
-  drawWrappedText(ctx, reminder, 95, 1115, 700, 30, 2);
+  drawWrappedText(ctx, '别只问哪台车最好。用途、预算和你愿意承担的代价，比参数表更重要。', 95, 1115, 700, 30, 2);
 
   return canvas;
 }

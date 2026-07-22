@@ -193,7 +193,7 @@ function safePrice(value) {
   return parsed !== null && parsed >= 0 ? parsed : null;
 }
 
-function safeUrl(value) {
+export function sanitizeDetailUrl(value) {
   const text = String(value || '').slice(0, 500);
   try {
     const parsed = new URL(text);
@@ -208,6 +208,50 @@ function safeUrl(value) {
   }
 }
 
+function isUnsafeImageHostname(hostname = '') {
+  const host = String(hostname).toLowerCase().replace(/^\[|\]$/g, '');
+  if (
+    !host
+    || !host.includes('.')
+    || host.includes(':')
+    || host === 'localhost'
+    || host.endsWith('.localhost')
+    || host.endsWith('.local')
+    || host.endsWith('.internal')
+  ) {
+    return true;
+  }
+  const ipv4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  return Boolean(ipv4);
+}
+
+export function sanitizeHttpsImageUrl(value) {
+  const text = normalizeSpace(value);
+  if (!text || text.length > 1000) return '';
+  try {
+    const parsed = new URL(text);
+    if (parsed.protocol !== 'https:' || parsed.username || parsed.password) return '';
+    if (parsed.port && parsed.port !== '443') return '';
+    if (isUnsafeImageHostname(parsed.hostname)) return '';
+    parsed.hash = '';
+    const normalized = parsed.href;
+    let decoded = normalized;
+    try {
+      decoded = decodeURIComponent(normalized);
+    } catch {
+      // 畸形转义不影响 URL 结构校验，继续使用未解码文本做脱敏检测。
+    }
+    if (
+      /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(decoded)
+      || /\b1[3-9]\d{9}\b/.test(decoded)
+      || /(?:微信|微信号|联系方式|\btel:|\bmailto:)/i.test(decoded)
+    ) return '';
+    return normalized;
+  } catch {
+    return '';
+  }
+}
+
 export function sanitizeListRecord(row = {}) {
   const parsedPrice = parseMoneyRange(row.price_text || row.list_text || '');
   const priceMin = safePrice(row.price_min) ?? parsedPrice.price_min;
@@ -217,7 +261,7 @@ export function sanitizeListRecord(row = {}) {
   return {
     source: limitPublicText(row.source, 80),
     id: limitPublicText(row.id, 64),
-    url: safeUrl(row.url),
+    url: sanitizeDetailUrl(row.url),
     list_name: row.list_name ? limitPublicText(row.list_name, 160) : null,
     variant_count: Number.isInteger(variantCount) && variantCount >= 0 ? variantCount : null,
     price_min: priceMin,
@@ -228,6 +272,11 @@ export function sanitizeListRecord(row = {}) {
 
 export function sanitizeDetailRecord(row = {}) {
   const list = sanitizeListRecord(row);
+  const detailUrl = sanitizeDetailUrl(row.detail_url) || list.url;
+  const imageUrl = sanitizeHttpsImageUrl(row.image_url);
+  const imageSourceUrl = imageUrl
+    ? sanitizeDetailUrl(row.image_source_url) || detailUrl
+    : '';
   const legacyText = [
     ...(Array.isArray(row.spec_fragments) ? row.spec_fragments : []),
     row.detail_text || ''
@@ -254,6 +303,9 @@ export function sanitizeDetailRecord(row = {}) {
 
   return {
     ...list,
+    detail_url: detailUrl,
+    image_url: imageUrl,
+    image_source_url: imageSourceUrl,
     price_min: priceMin,
     price_max: priceMax,
     detail_title: limitPublicText(row.detail_title || row.list_name, 180),

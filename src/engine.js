@@ -146,7 +146,10 @@ export function normalizeVehicle(vehicle, index = 0) {
     displacement: asNumber(vehicle.displacement),
     status: vehicle.status || '公开数据待校准',
     source,
-    sourceUrl: vehicle.source_url || vehicle.sourceUrl || '',
+    sourceUrl: vehicle.detail_url || vehicle.detailUrl || vehicle.source_url || vehicle.sourceUrl || vehicle.motofanUrl || '',
+    image: vehicle.image || vehicle.image_url || vehicle.imageUrl || '',
+    imageSourceUrl: vehicle.image_source_url || vehicle.imageSourceUrl || vehicle.source_url || vehicle.sourceUrl || '',
+    searchKeyword: vehicle.searchKeyword || `${vehicle.brand || ''} ${vehicle.model || vehicle.name || ''}`.trim(),
     updatedAt: vehicle.updated_at || vehicle.fetched_at || '',
     dataQuality,
     cost,
@@ -221,10 +224,6 @@ export function scoreVehicleDetailed(vehicle, answers, typeScores, primary, seco
   const reasons = [];
   const warnings = [];
   const hardBlocks = [];
-
-  if (vehicle.recommendable !== true) {
-    hardBlocks.push('车型尚未通过推荐资格审核');
-  }
 
   const typeAffinity = Number(typeScores[vehicle.type] || 0);
   score += Math.min(32, typeAffinity * 1.8);
@@ -424,7 +423,7 @@ export function dataQualityLabel(value) {
     sample: '示例库',
     public: '公开页',
     partial: '部分校准',
-    verified: '双核通过'
+    verified: '已校准'
   })[value] || '待校准';
 }
 

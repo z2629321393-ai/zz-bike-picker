@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#101b2c">
-  <meta name="description" content="骑不快的ZZ性格选车访谈：按用途、预算、身高、经验、维护意愿、停车环境和持有成本筛选摩托车方向。">
-  <title>骑不快的ZZ｜性格选车访谈 V4</title>
+  <meta name="description" content="骑不快的ZZ单项选择测试：先选择摩托车、头盔、手套、骑行服、骑行靴或其他装备，再只完成对应的一项测试。">
+  <title>骑不快的ZZ｜选车与装备单项测试 V6.2.0</title>
   <link rel="preload" href="assets/zz-logo.jpeg" as="image">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -16,7 +16,7 @@
   <header class="topbar">
     <button class="brand" type="button" data-action="home" aria-label="返回首页">
       <img src="assets/zz-logo.jpeg" alt="骑不快的ZZ">
-      <span><b>骑不快的ZZ</b><small>大熊说车 · 选车访谈</small></span>
+      <span><b>骑不快的ZZ</b><small>大熊说车 · 单项选择测试</small></span>
     </button>
     <div class="top-actions">
       <button class="data-pill" id="dataPill" type="button" data-action="data-info">车型库加载中</button>
@@ -25,19 +25,19 @@
   </header>
 
   <main id="app">
-    <section class="view intro-view is-active" id="introView">
-      <div class="intro-copy">
-        <div class="kicker"><span></span> 不是猜你喜欢，是先排除买错</div>
-        <h1>别急着问哪台车好。<br><em>先把你自己测明白。</em></h1>
-        <p class="intro-lead">像和一个懂机械、懂成本、也知道普通摩友会后悔什么的人聊一遍。先把用途、预算、身高、经验和停车环境说清楚，再给你推荐方向。</p>
+    <section class="view intro-view is-active intro-choice-view" id="introView">
+      <div class="intro-copy intro-choice-copy">
+        <div class="kicker"><span></span> 先选项目，再只测这一项</div>
+        <h1>你今天到底想选什么？<br><em>不用把全部项目做一遍。</em></h1>
+        <p class="intro-lead">先选择“摩托车推荐”，或者直接选择头盔、手套、骑行服/护具、骑行靴、三箱、射灯、蓝牙耳机、防盗。你选哪一项，系统就只问哪一项的问题，出完结果就结束。</p>
         <div class="feature-row">
-          <span>约3分钟</span><span>12轮访谈</span><span>结果可复制</span><span>可生成3:4海报</span>
+          <span>一次只做一个</span><span>单项结果</span><span>可随时返回</span><span>不强制串行</span>
         </div>
-        <div class="intro-actions">
-          <button class="primary-btn" type="button" data-action="start">开始访谈 <span>→</span></button>
-          <button class="secondary-btn is-hidden" id="continueBtn" type="button" data-action="continue">继续上次进度</button>
+        <div class="entry-grid" id="entryGrid"></div>
+        <div class="intro-actions compact-actions">
+          <button class="secondary-btn is-hidden" id="continueBtn" type="button" data-action="continue">继续上次摩托车选车进度</button>
         </div>
-        <p class="microcopy">不收手机号，不上传答案。测试结果只保存在当前浏览器。</p>
+        <p class="microcopy">不收手机号，不上传答案。测试结果只保存在当前浏览器。按键U可直接打开装备单项选择。</p>
       </div>
 
       <div class="intro-visual" aria-hidden="true">
@@ -45,10 +45,10 @@
         <div class="road-lines"></div>
         <div class="poster-card card-back"></div>
         <div class="poster-card card-front">
-          <div class="poster-head"><span>ZZ选车访谈</span><b>V4</b></div>
+          <div class="poster-head"><span>ZZ单项测试</span><b>V6.2.0</b></div>
           <img src="assets/zz-logo.jpeg" alt="">
-          <div class="poster-quote">“帅不帅先放一边，<br>你养不养得住？”</div>
-          <div class="poster-tags"><span>用途</span><span>预算</span><span>经验</span><span>停车</span></div>
+          <div class="poster-quote">“选车就只测车，<br>选手套就只测手套。”</div>
+          <div class="poster-tags"><span>选车</span><span>头盔</span><span>手套</span><span>骑行服</span></div>
         </div>
       </div>
     </section>
@@ -74,7 +74,7 @@
             <div><span id="stepLabel">第1轮</span><b id="sectionLabel">核心用途</b></div>
             <span id="progressNumber">8%</span>
           </div>
-          <div class="progress-track" id="progressTrack" role="progressbar" aria-label="访谈进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="8"><span id="progressBar"></span></div>
+          <div class="progress-track"><span id="progressBar"></span></div>
 
           <article class="question-card" id="questionCard"></article>
 
@@ -111,8 +111,17 @@
       <div class="result-content">
         <section class="decision-summary" id="decisionSummary"></section>
 
+        <section class="extension-launch single-choice-note">
+          <div>
+            <span class="decision-label">本项已经完成</span>
+            <h3>这次只做摩托车推荐，不会自动把装备全部测一遍。</h3>
+            <p>还想测头盔、手套、骑行服或其他装备时，返回项目选择页，自己再选一个单项。</p>
+          </div>
+          <button class="primary-btn" type="button" data-action="home">返回项目选择 →</button>
+        </section>
+
         <section class="result-section">
-          <div class="section-heading"><div><span>01</span><h3>双核车型白名单</h3></div><p>只显示完成中国市场、工信部与 CCC 核验的具体版本；白名单为空时不输出型号。</p></div>
+          <div class="section-heading"><div><span>01</span><h3>优先试坐这些方向</h3></div><p>不是直接下单，是先缩小试车范围。</p></div>
           <div class="vehicle-grid" id="vehicleGrid"></div>
         </section>
 
@@ -141,27 +150,141 @@
         </section>
       </div>
     </section>
+
+    <section class="view promo-view" id="promoView">
+      <div class="promo-shell">
+        <div class="promo-image-wrap">
+          <img id="promoImage" src="assets/extension-promo.png" alt="骑不快的ZZ装备扩展包">
+        </div>
+        <div class="promo-copy">
+          <span class="decision-label">先看一张提醒，再继续</span>
+          <h2 id="promoTitle">先看一张提醒，再开始单项测试</h2>
+          <p id="promoText">你选哪一项，就只进入哪一项测试，不会要求把其他项目全部做完。</p>
+          <div class="promo-cta" id="promoCtaText"></div>
+          <div class="promo-actions">
+            <button class="primary-btn" id="promoContinueBtn" type="button" data-action="promo-continue">下一步，开始本项测试 →</button>
+            <button class="ghost-btn" type="button" data-action="home">返回项目选择</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view accessory-hub-view" id="accessoryHubView">
+      <div class="accessory-head">
+        <div>
+          <span class="decision-label">ZZ装备单项选择</span>
+          <h2>选择你现在真正要解决的一个问题。<br>不用按顺序，也不用全部做完。</h2>
+          <p>点头盔就只测头盔，点手套就只测手套。完成以后直接看结果；是否再测其他项目由你自己决定。</p>
+        </div>
+        <div class="accessory-head-actions">
+          <button class="secondary-btn" type="button" data-action="home">返回项目选择</button>
+          <button class="ghost-btn" type="button" data-action="reset-accessories">重置扩展包</button>
+        </div>
+      </div>
+      <div class="accessory-grid" id="accessoryGrid"></div>
+    </section>
+
+    <section class="view accessory-interview-view" id="accessoryInterviewView">
+      <div class="accessory-interview-shell">
+        <aside class="accessory-side">
+          <button class="back-link" type="button" data-action="home">← 返回项目选择</button>
+          <div class="accessory-side-icon" id="accessorySideIcon">盔</div>
+          <span class="decision-label" id="accessorySideAccent">安全核心</span>
+          <h2 id="accessorySideTitle">如何选头盔</h2>
+          <p id="accessorySideSubtitle"></p>
+          <div class="mini-progress"><span id="accessoryProgressBar"></span></div>
+          <small id="accessoryProgressText">第1题 / 共4题</small>
+        </aside>
+        <section class="accessory-question-panel">
+          <article class="question-card" id="accessoryQuestionCard"></article>
+          <div class="question-nav">
+            <button class="nav-btn" type="button" data-action="accessory-back">← 上一题</button>
+            <button class="nav-btn nav-next" type="button" data-action="accessory-next">下一题 →</button>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="view accessory-result-view" id="accessoryResultView">
+      <div class="accessory-result-hero">
+        <button class="back-link light" type="button" data-action="home">← 返回项目选择</button>
+        <div class="accessory-result-kicker" id="accessoryResultKicker">头盔测试结果</div>
+        <h2 id="accessoryResultHeadline"></h2>
+        <p id="accessoryResultSummary"></p>
+        <div class="result-actions">
+          <button class="primary-btn" type="button" data-action="copy-accessory-result">复制结果文案</button>
+          <button class="secondary-btn" type="button" data-action="home">完成，返回项目选择</button>
+        </div>
+      </div>
+      <div class="accessory-result-content">
+        <section class="gear-profile-panel">
+          <div class="gear-profile-copy">
+            <span class="decision-label">真实取舍画像</span>
+            <h3>不是只给一个名称，而是告诉你它哪里强、哪里难受。</h3>
+            <p>分数是当前答案下的相对倾向，用来比较保护、舒适、操控和美观，不代表实验室检测结论。</p>
+          </div>
+          <div class="gear-metrics" id="accessoryMetrics"></div>
+        </section>
+        <section class="market-panel">
+          <div class="market-image-card">
+            <img id="accessoryMarketImage" src="assets/gear/helmet.svg" alt="装备推荐方向图">
+            <span>方向示意图 · 具体商品以平台页面为准</span>
+          </div>
+          <div class="market-info">
+            <span class="decision-label">看图、搜同类、跨平台比价</span>
+            <h3>别看到一张好看的图就下单，先用搜索词对比结构、尺码和真实评价。</h3>
+            <div class="market-info-grid">
+              <article><b>预算建议</b><p id="accessoryBudgetAdvice"></p></article>
+              <article><b>价格底线提醒</b><p id="accessoryPriceWarning"></p></article>
+            </div>
+            <div class="brand-hints"><b>品牌 / 产品方向</b><div id="accessoryBrandHints"></div></div>
+            <div class="search-keywords-wrap"><b>点击复制搜索词</b><div id="accessorySearchKeywords"></div></div>
+            <div class="market-link-row" id="accessoryMarketLinks"></div>
+            <p class="market-disclaimer">这些按钮只打开平台搜索结果，不是商品直购链接，也不代表平台实时最低价。价格、库存、评论和认证信息需要你自己再次核验。</p>
+          </div>
+        </section>
+        <section class="accessory-sensation-grid">
+          <article><span class="decision-label">真实使用感</span><h3>戴上/装上以后是什么感觉</h3><p id="accessoryFeelNote"></p></article>
+          <article><span class="decision-label">外观搭配</span><h3>别让装备和车互相打架</h3><p id="accessoryStyleNote"></p></article>
+        </section>
+        <section class="accessory-result-grid four">
+          <article class="accessory-advice trade"><span>你要接受的代价</span><div id="accessoryTradeoffs"></div></article>
+          <article class="accessory-advice good"><span>优先看</span><div id="accessoryPriorities"></div></article>
+          <article class="accessory-advice bad"><span>不要这样买</span><div id="accessoryAvoid"></div></article>
+          <article class="accessory-advice check"><span>下单前核对</span><div id="accessoryChecklist"></div></article>
+        </section>
+        <section class="spoken-reminder-card">
+          <img src="assets/zz-logo.jpeg" alt="骑不快的ZZ">
+          <div><span class="decision-label">只念一句，不做跳转</span><h3>需要再去抖音橱窗看看</h3><p id="accessorySpokenLine"></p></div>
+        </section>
+        <section class="copy-section accessory-copy-section">
+          <div><span class="decision-label">可直接发给粉丝</span><h3>装备建议文案</h3></div>
+          <pre id="accessoryCopyText"></pre>
+          <button class="secondary-btn" type="button" data-action="copy-accessory-result">复制文案</button>
+        </section>
+      </div>
+    </section>
   </main>
 
-  <dialog class="modal" id="vehicleModal" aria-labelledby="vehicleModalTitle">
+  <dialog class="modal" id="vehicleModal">
     <button class="modal-close" type="button" data-action="close-modal" aria-label="关闭">×</button>
     <div id="vehicleModalContent"></div>
   </dialog>
 
-  <dialog class="modal poster-modal" id="posterModal" aria-labelledby="posterModalTitle">
+  <dialog class="modal poster-modal" id="posterModal">
     <button class="modal-close" type="button" data-action="close-poster" aria-label="关闭">×</button>
-    <div class="poster-modal-head"><span class="decision-label">3:4结果海报</span><h3 id="posterModalTitle">保存后可以发群、发评论区或做内容互动</h3></div>
-    <canvas id="posterCanvas" role="img" aria-label="结果海报生成中"></canvas>
+    <div class="poster-modal-head"><span class="decision-label">3:4结果海报</span><h3>保存后可以发群、发评论区或做内容互动</h3></div>
+    <canvas id="posterCanvas"></canvas>
     <div class="poster-actions">
       <button class="primary-btn" type="button" data-action="download-poster">保存PNG</button>
       <button class="secondary-btn" type="button" data-action="close-poster">关闭</button>
     </div>
   </dialog>
 
-  <dialog class="modal data-modal" id="dataModal" aria-labelledby="dataModalTitle">
+  <dialog class="modal data-modal" id="dataModal">
     <button class="modal-close" type="button" data-action="close-data" aria-label="关闭">×</button>
     <span class="decision-label">车型数据状态</span>
-    <h3 id="dataModalTitle">公开车型目录与推荐白名单</h3>
+    <h3>推荐逻辑与车型数据分开维护</h3>
     <div id="dataModalContent"></div>
   </dialog>
 
