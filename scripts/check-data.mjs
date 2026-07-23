@@ -21,25 +21,30 @@ for (const vehicle of vehicles) {
   if (!vehicle.year) warnings.push(`${vehicle.brand} ${vehicle.model} 缺少年款`);
 }
 
-const expectedProductCounts = {
-  helmet: 25,
-  gloves: 20,
-  armor: 21,
-  boots: 19,
-  luggage: 13,
-  lights: 13,
-  intercom: 47,
-  theft: 10
+const minimumProductCounts = {
+  helmet: 130,
+  gloves: 70,
+  armor: 110,
+  boots: 70,
+  luggage: 40,
+  lights: 30,
+  intercom: 75,
+  theft: 30
 };
 const productStats = productCatalogStats();
 const productIds = new Set();
 const productNames = new Set();
-const recordTypes = new Set(['exact', 'series', 'direction', 'bundle']);
+const recordTypes = new Set(['exact', 'series', 'direction', 'bundle', 'archived']);
+const catalogScopes = new Set(['candidate', 'source-checked-candidate', 'verification-needed', 'directory']);
+const cnEvidenceTiers = new Set(['cn_sku_snapshot', 'cn_exact_public', 'system_direction', 'catalog_reference']);
 
-if (productStats.total !== 168) errors.push(`装备候选目录应为168条，实际为${productStats.total}条`);
-for (const [categoryId, expected] of Object.entries(expectedProductCounts)) {
+if (productStats.total < 580) errors.push(`装备资料库至少应为580条，实际为${productStats.total}条`);
+if (productStats.directoryOnly < 380) errors.push(`资料库专用条目至少应为380条，实际为${productStats.directoryOnly}条`);
+if (productStats.sourceCheckedCandidates < 6) errors.push(`至少应保留6条中文官方具体型号资料候选，实际为${productStats.sourceCheckedCandidates}条`);
+if (productStats.withMarketSignal < 20) errors.push(`至少应保留20条带日期的中文公开平台快照记录，实际为${productStats.withMarketSignal}条`);
+for (const [categoryId, expected] of Object.entries(minimumProductCounts)) {
   const actual = productStats.byCategory[categoryId] || 0;
-  if (actual !== expected) errors.push(`${categoryId}装备目录应为${expected}条，实际为${actual}条`);
+  if (actual < expected) errors.push(`${categoryId}装备资料库至少应为${expected}条，实际为${actual}条`);
 }
 
 for (const product of PRODUCT_CATALOG) {
@@ -55,6 +60,39 @@ for (const product of PRODUCT_CATALOG) {
   productNames.add(canonicalName);
 
   if (!recordTypes.has(product.recordType)) errors.push(`${product.id} recordType无效：${product.recordType}`);
+  if (!catalogScopes.has(product.catalogScope || 'candidate')) errors.push(`${product.id} catalogScope无效：${product.catalogScope}`);
+  if (!cnEvidenceTiers.has(product.cnEvidenceTier)) errors.push(`${product.id} cnEvidenceTier无效：${product.cnEvidenceTier}`);
+  if (['series', 'direction', 'archived'].includes(product.recordType) && product.recommendable !== false) {
+    errors.push(`${product.id} 是${product.recordType}资料，不能进入自动推荐`);
+  }
+  if (product.recordType === 'bundle' && product.categoryId !== 'theft' && product.recommendable !== false) {
+    errors.push(`${product.id} 只有防盗组合方案可以作为自动推荐的 bundle`);
+  }
+  if (product.catalogScope === 'verification-needed' && product.recommendable !== false) {
+    errors.push(`${product.id} 待核验型号不能进入自动推荐`);
+  }
+  if (product.catalogScope === 'source-checked-candidate' && product.cnEvidenceTier !== 'cn_exact_public') {
+    errors.push(`${product.id} 来源可核验候选必须有中文官方具体型号资料证据`);
+  }
+  if (product.cnEvidenceTier === 'cn_sku_snapshot' && (!product.marketSignal?.sourceUrl || !product.marketSignal?.observedAt)) {
+    errors.push(`${product.id} 中文公开渠道型号快照缺少日期或来源链接`);
+  }
+  if (product.cnEvidenceTier === 'cn_exact_public' && (!product.sourceUrl || !/^\d{4}-\d{2}-\d{2}$/.test(product.sourceCheckedAt || ''))) {
+    errors.push(`${product.id} 中文官方具体型号资料缺少来源或核验日期`);
+  }
+  if (product.cnEvidenceTier === 'system_direction' && !(product.categoryId === 'theft' && product.recordType === 'bundle')) {
+    errors.push(`${product.id} 只有防盗组合方案可以使用 system_direction 证据等级`);
+  }
+  if (product.recommendable === true) {
+    const validExactRecommendation = product.recordType === 'exact'
+      && product.cnEvidenceTier === 'cn_exact_public';
+    const validTheftDirection = product.categoryId === 'theft'
+      && product.recordType === 'bundle'
+      && product.cnEvidenceTier === 'system_direction';
+    if (!validExactRecommendation && !validTheftDirection) {
+      errors.push(`${product.id} 自动推荐必须有中文官方/旗舰店具体型号资料，或防盗分层方案证据`);
+    }
+  }
   if (!product.cnAvailability) errors.push(`${product.id} 缺少国内渠道状态`);
   if (!Array.isArray(product.aliases)) errors.push(`${product.id} aliases必须是数组`);
   if (!product.priceBand || !product.idealFor || !product.reviewSummary || !product.compromise) {
@@ -63,6 +101,7 @@ for (const product of PRODUCT_CATALOG) {
   for (const [field, url] of [
     ['officialUrl', product.officialUrl],
     ['reviewUrl', product.reviewUrl],
+    ['sourceUrl', product.sourceUrl],
     ['marketSignal.sourceUrl', product.marketSignal?.sourceUrl]
   ]) {
     if (url && !url.startsWith('https://')) errors.push(`${product.id} ${field}必须使用HTTPS`);
@@ -73,6 +112,10 @@ for (const product of PRODUCT_CATALOG) {
   if (!product.marketSignal && /(热卖|排行|热门)/.test(product.sourceType || '')) {
     errors.push(`${product.id} 没有公开快照却使用热卖/排行措辞`);
   }
+  if (product.catalogScope === 'directory') {
+    if (product.recommendable !== false) errors.push(`${product.id} 资料库条目不能进入自动推荐`);
+    if (!product.sourceUrl || !product.taxonomy?.type || !product.taxonomy?.fitNote) errors.push(`${product.id} 资料库条目缺少来源、类型或适配提醒`);
+  }
 }
 
 if (DEMO_VEHICLE_META.total !== vehicles.length) {
@@ -80,7 +123,7 @@ if (DEMO_VEHICLE_META.total !== vehicles.length) {
 }
 
 console.log(`示例/第三方候选总数：${vehicles.length}`);
-console.log(`装备候选目录：${productStats.total}条（公开平台快照${productStats.withMarketSignal}条）`);
+console.log(`装备资料库：${productStats.total}条（资料库专用${productStats.directoryOnly}条，来源可核验候选${productStats.sourceCheckedCandidates}条，公开平台快照${productStats.withMarketSignal}条）`);
 console.log(`数据提醒：${warnings.length}`);
 if (warnings.length) console.log(warnings.slice(0, 12).map((item) => `- ${item}`).join('\n'));
 if (warnings.length > 12) console.log(`... 其余 ${warnings.length - 12} 条省略`);

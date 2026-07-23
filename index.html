@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#101b2c">
   <meta name="description" content="骑不快的ZZ选车与装备建议工具：一次选择一个问题，几分钟获得清晰的车型或骑行装备建议。">
-  <title>骑不快的ZZ｜选车与装备建议 V6.4.0</title>
+  <title>骑不快的ZZ｜选车与装备建议 V6.5.1</title>
   <link rel="preload" href="assets/zz-logo.jpeg" as="image">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -28,8 +28,8 @@
     <section class="view intro-view is-active intro-choice-view" id="introView">
       <div class="intro-copy intro-choice-copy">
         <div class="kicker"><span></span> 一次只解决一个问题</div>
-        <h1>今天先解决哪件事？<br><em>选车或装备，很快就有方向。</em></h1>
-        <p class="intro-lead">想选车，就完成 12 道问题；想挑装备，就直接选择对应类别。每次只测试一项，结果会说明适合方向、现实取舍和下一步怎么比较。</p>
+        <h1>今天先解决一件事。<br><em>选车、头盔或装备，都可以单独开始。</em></h1>
+        <p class="intro-lead">选车就完成 12 道问题；挑装备就直接进入对应类别。一次只处理一项，结果会讲清推荐方向、需要接受的取舍，以及下一步该怎么比较。</p>
         <div class="feature-row">
           <span>一次只测一项</span><span>给出清晰建议</span><span>随时返回重选</span><span>答案仅存本机</span>
         </div>
@@ -45,7 +45,7 @@
         <div class="road-lines"></div>
         <div class="poster-card card-back"></div>
         <div class="poster-card card-front">
-          <div class="poster-head"><span>ZZ选车与装备建议</span><b>V6.4.0</b></div>
+          <div class="poster-head"><span>ZZ选车与装备建议</span><b>V6.5.1</b></div>
           <img src="assets/zz-logo.jpeg" alt="">
           <div class="poster-quote">“先把需求讲清楚，<br>再看什么真正适合你。”</div>
           <div class="poster-tags"><span>选车</span><span>头盔</span><span>手套</span><span>骑行服</span></div>
@@ -173,8 +173,8 @@
       <div class="accessory-head">
         <div>
           <span class="decision-label">装备选择</span>
-          <h2>今天先解决哪一项装备问题？<br>不用按顺序，也不用一次全部做完。</h2>
-          <p>选择后只回答对应问题，完成即可查看建议；其他项目随时可以再测。</p>
+          <h2>先从你最想解决的装备开始。<br>每个类别单独测试，其他需求随时再回来补。</h2>
+          <p>选择后只回答这一类真正相关的问题；完成后会给出建议、取舍和可继续浏览的完整资料库。</p>
         </div>
         <div class="accessory-head-actions">
           <button class="secondary-btn" type="button" data-action="home">返回项目选择</button>
@@ -245,15 +245,25 @@
         </section>
         <section class="product-ladder-panel">
           <div class="product-ladder-head">
-            <div><span class="decision-label" id="accessoryProductLabel">优先候选</span><h3 id="accessoryProductTitle">从最匹配开始，比较符合核心筛选条件的可选项。</h3></div>
-            <p id="accessoryProductIntro">系统会按你的答案、产品适配和资料核验程度给出候选；没有符合核心条件的替代项时，不会补足数量。</p>
+            <div><span class="decision-label" id="accessoryProductLabel">优先候选</span><h3 id="accessoryProductTitle">从最匹配开始，比较符合核心筛选条件的可核验候选。</h3></div>
+            <p id="accessoryProductIntro">系统优先使用中文官方/旗舰店的具体型号资料；没有时只展示“国内购买待核验”的选型参考，不会凑数或把资料页写成现货。</p>
           </div>
           <div class="product-ladder-grid" id="accessoryProductLadder"></div>
           <p class="product-ladder-disclaimer">价格、库存和版本会变化。页面展示的是候选方向与公开资料，不把单个平台榜单当作全市场销量。</p>
         </section>
         <section class="hotlist-panel">
-          <div class="hotlist-head"><div><span class="decision-label">同类目录参考</span><h3>目录中的 10 项候选（非排名）</h3></div><p>带日期和来源的公开平台快照会优先展示；其余只是目录参考，卡片顺序不代表销量名次。</p></div>
+          <div class="hotlist-head"><div><span class="decision-label">中文来源候选</span><h3 id="accessoryHotlistTitle">先从可核验的中文官方/旗舰店型号资料开始</h3></div><p id="accessoryHotlistNote">这里只展示能核验到中文官方或旗舰店具体型号资料的候选，不是完整目录，也不代表实时库存或销量名次；完整资料库可在下方按类型、用途和品牌筛选。</p></div>
           <div class="hotlist-grid" id="accessoryHotlist"></div>
+        </section>
+        <section class="catalog-explorer-panel" id="accessoryCatalogPanel">
+          <div class="catalog-explorer-head">
+            <div><span class="decision-label">品牌 → 产品线 → 型号资料库</span><h3>按类型、用途和品牌浏览完整目录</h3></div>
+            <p id="accessoryCatalogSummary">资料库会把中文公开目录线索、来源可核验候选和原有推荐候选分开标注；具体版本、尺码、认证和库存仍需要购买前复核。</p>
+          </div>
+          <div class="catalog-filter-grid" id="accessoryCatalogFilters"></div>
+          <div class="catalog-grid" id="accessoryCatalogGrid"></div>
+          <div class="catalog-more-row"><button class="secondary-btn" type="button" id="accessoryCatalogMore" data-action="catalog-load-more">显示更多目录记录</button></div>
+          <p class="catalog-disclaimer">“资料库条目”用于查看品牌、系列和型号范围，不自动参加推荐；“中文官方型号资料”必须带具体官方或旗舰店型号页，仍不等于此刻有货，也不等于某个配色/尺码已经完成认证核验。</p>
         </section>
         <section class="accessory-sensation-grid">
           <article><span class="decision-label">实际使用感受</span><h3>日常使用会有哪些感受</h3><p id="accessoryFeelNote"></p></article>

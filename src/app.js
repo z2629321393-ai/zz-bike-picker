@@ -35,7 +35,14 @@ import {
   saveAccessorySession
 } from './accessories.js';
 import { isAggregateVehicle, marketplaceLinks, motofanLinks, safeGearImage, safeImage } from './marketplace.js';
-import { CATALOG_UPDATED_AT, popularProductsForCategory, productCatalogStats } from './product-catalog.js';
+import {
+  CATALOG_CODE_UPDATED_AT,
+  CN_EVIDENCE_LABELS,
+  catalogFacetsForCategory,
+  catalogProductsForCategory,
+  popularProductsForCategory,
+  productCatalogStats
+} from './product-catalog.js';
 
 const VEHICLES = mergeAndNormalizeVehicles(BASE_VEHICLES, MOTOFAN_VEHICLES);
 const PRODUCT_STATS = productCatalogStats();
@@ -44,6 +51,7 @@ let currentResult = null;
 let autoAdvanceTimer = null;
 let accessorySession = loadAccessorySession();
 let currentAccessoryResult = null;
+let accessoryCatalogState = null;
 
 const els = {
   intro: document.getElementById('introView'),
@@ -105,7 +113,14 @@ const els = {
   accessoryProductTitle: document.getElementById('accessoryProductTitle'),
   accessoryProductIntro: document.getElementById('accessoryProductIntro'),
   accessoryProductLadder: document.getElementById('accessoryProductLadder'),
-  accessoryHotlist: document.getElementById('accessoryHotlist')
+  accessoryHotlist: document.getElementById('accessoryHotlist'),
+  accessoryHotlistTitle: document.getElementById('accessoryHotlistTitle'),
+  accessoryHotlistNote: document.getElementById('accessoryHotlistNote'),
+  accessoryCatalogPanel: document.getElementById('accessoryCatalogPanel'),
+  accessoryCatalogSummary: document.getElementById('accessoryCatalogSummary'),
+  accessoryCatalogFilters: document.getElementById('accessoryCatalogFilters'),
+  accessoryCatalogGrid: document.getElementById('accessoryCatalogGrid'),
+  accessoryCatalogMore: document.getElementById('accessoryCatalogMore')
 };
 
 init();
@@ -120,6 +135,7 @@ function init() {
 
   document.addEventListener('click', handleClick);
   document.addEventListener('input', handleInput);
+  document.addEventListener('change', handleInput);
   document.addEventListener('keydown', handleKeys);
 
   const sharedType = new URLSearchParams(location.search).get('result');
@@ -163,6 +179,7 @@ function handleClick(event) {
     if (action === 'accessory-next') nextAccessoryQuestion();
     if (action === 'copy-accessory-result') copyAccessoryResult();
     if (action === 'accessory-finish') goHome();
+    if (action === 'catalog-load-more') loadMoreAccessoryCatalog();
     return;
   }
 
@@ -233,6 +250,9 @@ function handleInput(event) {
     state.answers.weight = Number(event.target.value);
     saveState(state);
     updateBodyLive();
+  }
+  if (event.target.matches?.('[data-catalog-filter]')) {
+    updateAccessoryCatalogFilter(event.target.dataset.catalogFilter, event.target.value);
   }
 }
 
@@ -731,23 +751,25 @@ function openDataInfo() {
   els.dataModalContent.innerHTML = `
     <div class="data-stats">
       <div class="data-stat"><strong>${VEHICLES.length}</strong><span>车型方向记录</span></div>
-      <div class="data-stat"><strong>${PRODUCT_STATS.total}</strong><span>装备候选记录</span></div>
-      <div class="data-stat"><strong>${PRODUCT_STATS.recommendable}</strong><span>当前参与装备匹配</span></div>
+      <div class="data-stat"><strong>${PRODUCT_STATS.total}</strong><span>装备资料记录</span></div>
+      <div class="data-stat"><strong>${PRODUCT_STATS.recommendable}</strong><span>可进入默认匹配</span></div>
+      <div class="data-stat"><strong>${PRODUCT_STATS.directoryOnly}</strong><span>仅供资料库浏览</span></div>
       <div class="data-stat"><strong>${PRODUCT_STATS.withMarketSignal}</strong><span>带公开平台快照</span></div>
     </div>
     <div class="modal-section"><h4>推荐逻辑与数据来源分开维护</h4><div class="modal-list">
       <div>车型库用于筛选适合方向，不承诺覆盖国内全部在售车型；国内购买状态会单独标注。</div>
-      <div>装备目录覆盖八个类别。只有带日期和来源的记录才会显示“公开平台快照”，其余只是常见候选，不冒充销量排名。</div>
-      <div>目录含 ${PRODUCT_STATS.byRecordType.exact || 0} 条具体型号、${PRODUCT_STATS.byRecordType.series || 0} 条系列、${PRODUCT_STATS.byRecordType.direction || 0} 条选购方向和 ${PRODUCT_STATS.byRecordType.bundle || 0} 条组合方案；目录行数不等于独立在售SKU数。</div>
-      <div>公开页记录会显示可信度；缺少座高、车重、年款或渠道信息时会明确提醒核验。</div>
-      <div>版本：App ${APP_VERSION}｜车型数据 ${DATA_VERSION}｜装备目录 ${CATALOG_UPDATED_AT}</div>
+      <div>装备资料库覆盖八个类别。“默认匹配”“选型参考”和“品牌—产品线—型号资料库”严格分开；榜单、价格页或搜索页只表示公开出现过，不冒充销量排名或实时库存。</div>
+      <div>默认匹配只使用 ${PRODUCT_STATS.sourceCheckedCandidates} 条中文官方/旗舰店具体型号资料，以及防盗的分层方案；${PRODUCT_STATS.selectionReferences} 条同场景型号只作为“国内购买待核验”的选型参考。</div>
+      <div>目录含 ${PRODUCT_STATS.byRecordType.exact || 0} 条具体型号、${PRODUCT_STATS.byRecordType.series || 0} 条系列、${PRODUCT_STATS.byRecordType.direction || 0} 条选购方向和 ${PRODUCT_STATS.byRecordType.bundle || 0} 条组合方案；目录行数不等于独立在售 SKU 数。</div>
+      <div>公开页记录会显示来源类型与核验日期；具体颜色、尺码、认证、卖家主体、库存和成交价都要在下单前再次核对。</div>
+      <div>版本：App ${APP_VERSION}｜车型数据 ${DATA_VERSION}｜装备目录代码更新 ${CATALOG_CODE_UPDATED_AT}</div>
     </div></div>
   `;
   els.dataModal.showModal();
 }
 
 function updateDataPill() {
-  els.dataPill.textContent = `车型方向 ${VEHICLES.length} 条 · 装备候选 ${PRODUCT_STATS.total} 条`;
+  els.dataPill.textContent = `车型方向 ${VEHICLES.length} 条 · 装备资料 ${PRODUCT_STATS.total} 条`;
 }
 
 
@@ -858,7 +880,7 @@ function renderAccessoryQuestion() {
   setText('accessoryProgressText', `第 ${accessorySession.currentQuestion + 1} 题 / 共 ${category.questions.length} 题`);
 
   els.accessoryQuestionCard.innerHTML = `
-    <div class="question-eyebrow">${escapeHtml(category.title)}</div>
+    <div class="question-eyebrow">${escapeHtml(category.title)} · ${escapeHtml(question.stage || '选择偏好')}</div>
     <h2 class="question-title">${escapeHtml(question.title)}</h2>
     <p class="question-help">${escapeHtml(question.help)}</p>
     <div class="option-grid">${question.options.map(([value, label, detail], index) => `
@@ -920,7 +942,13 @@ function buildAccessoryResult(category) {
 
   setText('accessoryResultKicker', `${category.title.replace('帮我选', '')} · 你的建议`);
   setText('accessoryResultHeadline', result.headline);
-  setText('accessoryResultSummary', result.summary);
+  if (els.accessoryResultSummary) {
+    const selectionItems = result.selectionItems || [];
+    const selectionHtml = selectionItems.length
+      ? `<span class="accessory-selection-label">基于你的选择</span><span class="accessory-selection-tags">${selectionItems.map((item) => `<span class="accessory-selection-tag"><b>${escapeHtml(item.stage)}</b>${escapeHtml(item.label)}</span>`).join('')}</span>`
+      : '';
+    els.accessoryResultSummary.innerHTML = `${escapeHtml(result.summary)}${selectionHtml}`;
+  }
   els.accessoryPriorities.innerHTML = renderAccessoryList(result.priorities);
   els.accessoryTradeoffs.innerHTML = renderAccessoryList(result.tradeoffs);
   els.accessoryAvoid.innerHTML = renderAccessoryList(result.avoid);
@@ -932,6 +960,7 @@ function buildAccessoryResult(category) {
   renderAccessoryMarket(category, result);
   renderAccessoryProductLadder(category, result.productLadder);
   renderAccessoryHotlist(category);
+  renderAccessoryCatalogExplorer(category, answers);
   setText('accessoryCopyText', copyText);
   renderAccessoryHub();
   renderEntryChoices();
@@ -962,6 +991,13 @@ function renderAccessoryMarket(category, result) {
 function renderAccessoryHotlist(category) {
   if (!els.accessoryHotlist) return;
   const products = popularProductsForCategory(category.id, 10);
+  const total = catalogFacetsForCategory(category.id).total;
+  setText('accessoryHotlistTitle', products.length
+    ? `本类 ${products.length} 个中文来源可核验候选（非销量排名）`
+    : '本类暂没有中文来源可核验候选');
+  setText('accessoryHotlistNote', products.length
+    ? `本类已收录 ${total} 条品牌、产品线和型号资料。这里仅展示具备中文官方/旗舰店具体型号资料的候选；其余请在下方按类型、用途和品牌浏览，并核验国内购买状态。`
+    : `本类已收录 ${total} 条品牌、产品线和型号资料，但尚未找到足够的中文官方/旗舰店具体型号资料进入默认匹配。下方仍可按类型、用途和品牌浏览。`);
   if (!products.length) {
     els.accessoryHotlist.innerHTML = '<article class="hotlist-empty">当前还没有可核验的同类候选。</article>';
     return;
@@ -969,16 +1005,14 @@ function renderAccessoryHotlist(category) {
 
   els.accessoryHotlist.innerHTML = products.map((product) => {
     const signal = product.marketSignal;
-    const status = signal
-      ? `${signal.platform}公开快照 · ${signal.observedAt}`
-      : `目录候选 · 非销量排名`;
-    const description = signal?.signal || `已按${product.sourceType || '公开资料'}收录，当前没有单独的公开热卖快照。`;
-    const sourceUrl = safeProductUrl(signal?.sourceUrl || '');
+    const status = productEvidenceLabel(product);
+    const description = signal?.signal || `已按${product.sourceType || '公开资料'}收录；实际颜色、尺码、库存和成交价仍需购买前核验。`;
+    const sourceUrl = safeProductUrl(signal?.sourceUrl || product.sourceUrl || '');
     const officialUrl = safeProductUrl(product.officialUrl || '');
     const links = marketplaceLinks(product.searchKeyword || `${product.brand} ${product.model}`);
     return `<article class="hotlist-card">
       <div class="hotlist-marker ${signal ? 'is-snapshot' : ''}" aria-hidden="true"></div>
-      <div class="hotlist-main"><small>${escapeHtml(status)} · ${escapeHtml(recordTypeLabel(product.recordType))}</small><h4>${escapeHtml(product.brand)}｜${escapeHtml(product.model)}</h4><p>${escapeHtml(description)}</p><p><b>国内状态：</b>${escapeHtml(product.cnAvailability)}</p></div>
+      <div class="hotlist-main"><small>${escapeHtml(status)} · ${escapeHtml(recordTypeLabel(product.recordType))}</small><h4>${escapeHtml(product.brand)}｜${escapeHtml(product.model)}</h4>${renderTaxonomyTags(product)}<p>${escapeHtml(description)}</p><p><b>国内状态：</b>${escapeHtml(product.cnAvailability)}</p></div>
       <div class="hotlist-price">${escapeHtml(product.priceBand || '价格待核验')}</div>
       <div class="hotlist-actions">
         ${sourceUrl ? `<a href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener noreferrer">查看快照来源</a>` : ''}
@@ -990,14 +1024,140 @@ function renderAccessoryHotlist(category) {
   }).join('');
 }
 
+function renderAccessoryCatalogExplorer(category, answers = {}) {
+  if (!els.accessoryCatalogGrid || !els.accessoryCatalogFilters) return;
+  const facets = catalogFacetsForCategory(category.id);
+  const typeKey = catalogTypeKey(category.id);
+  const defaultType = typeKey ? answers[typeKey] || '' : '';
+  const defaultUsage = answers.usage || '';
+  accessoryCatalogState = {
+    categoryId: category.id,
+    limit: 24,
+    filters: { type: defaultType, usage: defaultUsage, brand: '', scope: '', search: '' }
+  };
+
+  const selectedUsage = defaultUsage ? `<option value="${escapeHtml(defaultUsage)}" selected>当前用途：${escapeHtml(accessoryUsageLabel(category.id, defaultUsage))}</option>` : '';
+  const usageOptions = catalogUsageOptions(category.id, facets).filter((item) => item.value !== defaultUsage)
+    .map((item) => `<option value="${escapeHtml(item.value)}">${escapeHtml(item.label)}</option>`).join('');
+  const typeOptions = facets.types.map((item) => `<option value="${escapeHtml(item.value)}" ${item.value === defaultType ? 'selected' : ''}>${escapeHtml(item.label)}</option>`).join('');
+  const brandOptions = facets.brands.map((brand) => `<option value="${escapeHtml(brand)}">${escapeHtml(brand)}</option>`).join('');
+
+  els.accessoryCatalogFilters.innerHTML = `
+    ${facets.types.length ? `<label>类型<select data-catalog-filter="type"><option value="">全部类型</option>${typeOptions}</select></label>` : ''}
+    <label>用途<select data-catalog-filter="usage"><option value="">全部用途</option>${selectedUsage}${usageOptions}</select></label>
+    <label>品牌<select data-catalog-filter="brand"><option value="">全部品牌</option>${brandOptions}</select></label>
+    <label>资料状态<select data-catalog-filter="scope"><option value="">全部记录</option><option value="candidate">中文渠道快照候选</option><option value="source-checked-candidate">中文官方型号资料</option><option value="verification-needed">选型参考（国内购买待核验）</option><option value="directory">资料库条目（不参与推荐）</option></select></label>
+    <label class="catalog-search-label">搜索型号/系列<input data-catalog-filter="search" type="search" placeholder="例如：揭面、Klim、骑行裤"></label>`;
+  renderAccessoryCatalogCards();
+}
+
+function catalogUsageOptions(categoryId, facets) {
+  const byCategory = {
+    helmet: [['city', '城市通勤'], ['touring', '摩旅/长途'], ['sport', '跑山/运动'], ['track', '赛道'], ['offroad', '林道/场地越野']],
+    gloves: [['city', '城市通勤'], ['touring', '摩旅/雨天'], ['mountain', '跑山/街道运动'], ['track', '赛道'], ['offroad', 'ADV/轻越野']],
+    armor: [['commute', '城市通勤'], ['touring', '摩旅/ADV'], ['sport', '跑山/街道运动'], ['track', '赛道'], ['offroad', '林道/轻越野']],
+    boots: [['city', '城市通勤'], ['touring', '摩旅/ADV'], ['sport', '跑山/街道运动'], ['track', '赛道'], ['offroad', '林道/场地越野']],
+    luggage: [['commute', '通勤'], ['touring', '摩旅'], ['camp', '露营/非铺装'], ['passenger', '载人']],
+    lights: [['city', '城市道路'], ['touring', '摩旅/夜路'], ['fog', '雨雾'], ['offroad', '非铺装']],
+    intercom: [['solo', '单人'], ['pair', '双人'], ['small', '3—6人'], ['large', '多人车队']],
+    theft: [['indoor', '室内'], ['monitored', '有监控'], ['outdoor', '露天'], ['uncertain', '经常临停']]
+  };
+  const all = byCategory[categoryId] || [];
+  const available = new Set(catalogProductsForCategory(categoryId).flatMap((product) => product.fit?.usage || []));
+  return all.filter(([value]) => available.has(value)).map(([value, label]) => ({ value, label }));
+}
+
+function catalogTypeKey(categoryId) {
+  return ({
+    helmet: 'helmetType',
+    gloves: 'protection',
+    armor: 'garmentType',
+    boots: 'style',
+    luggage: 'system',
+    lights: 'beam',
+    intercom: 'group',
+    theft: 'parking'
+  })[categoryId] || '';
+}
+
+function accessoryUsageLabel(categoryId, value) {
+  return catalogUsageOptions(categoryId).find((item) => item.value === value)?.label || value;
+}
+
+function updateAccessoryCatalogFilter(key, value) {
+  if (!accessoryCatalogState) return;
+  accessoryCatalogState.filters[key] = value;
+  accessoryCatalogState.limit = 24;
+  renderAccessoryCatalogCards();
+}
+
+function loadMoreAccessoryCatalog() {
+  if (!accessoryCatalogState) return;
+  accessoryCatalogState.limit += 24;
+  renderAccessoryCatalogCards();
+}
+
+function renderAccessoryCatalogCards() {
+  if (!accessoryCatalogState || !els.accessoryCatalogGrid) return;
+  const { categoryId, filters, limit } = accessoryCatalogState;
+  const products = catalogProductsForCategory(categoryId, filters);
+  const facets = catalogFacetsForCategory(categoryId);
+  const visible = products.slice(0, limit);
+  setText('accessoryCatalogSummary', `本类已收录 ${facets.total} 条品牌、产品线和型号资料；当前筛选 ${products.length} 条，显示前 ${visible.length} 条。目录按品牌与型号稳定排序，不按销量排序。`);
+  if (!visible.length) {
+    els.accessoryCatalogGrid.innerHTML = '<article class="catalog-empty">没有匹配的资料。可以清除类型、用途或品牌筛选，查看完整目录。</article>';
+  } else {
+    els.accessoryCatalogGrid.innerHTML = visible.map((product) => renderCatalogProductCard(product)).join('');
+  }
+  if (els.accessoryCatalogMore) {
+    els.accessoryCatalogMore.hidden = products.length <= visible.length;
+    els.accessoryCatalogMore.textContent = `显示更多目录记录（还剩 ${Math.max(0, products.length - visible.length)} 条）`;
+  }
+}
+
+function renderCatalogProductCard(product) {
+  const sourceUrl = safeProductUrl(product.sourceUrl || product.marketSignal?.sourceUrl || product.officialUrl || product.reviewUrl || '');
+  const scope = product.catalogScope === 'source-checked-candidate'
+    ? '中文官方型号资料 · 可进入默认匹配'
+    : product.catalogScope === 'verification-needed'
+      ? (product.selectionEligible ? '选型参考 · 国内购买待核验' : '型号待核验 · 不参与推荐')
+    : product.catalogScope === 'directory'
+      ? '资料库条目 · 不参与推荐'
+      : '中文渠道快照候选 · 库存另核';
+  const links = marketplaceLinks(product.searchKeyword || `${product.brand} ${product.model}`);
+  return `<article class="catalog-card">
+    <div class="catalog-card-top"><small>${escapeHtml(scope)} · ${escapeHtml(recordTypeLabel(product.recordType))}</small><span>${escapeHtml(product.priceBand || '价格待核验')}</span></div>
+    <h4>${escapeHtml(product.brand)}｜${escapeHtml(product.model)}</h4>
+    ${renderTaxonomyTags(product)}
+    <p><b>适用画像：</b>${escapeHtml(product.taxonomy?.persona || product.idealFor)}</p>
+    <p><b>国内状态：</b>${escapeHtml(product.cnAvailability)}</p>
+    <p class="catalog-source"><b>核验等级：</b>${escapeHtml(productEvidenceLabel(product))}</p>
+    <p class="catalog-source"><b>资料来源：</b>${escapeHtml(product.sourceLabel || product.sourceType || '公开资料')}</p>
+    <div class="catalog-card-actions">
+      ${sourceUrl ? `<a href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener noreferrer">查看目录来源</a>` : ''}
+      ${links.slice(0, 2).map((link) => `<a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)}</a>`).join('')}
+      <button type="button" data-copy-text="${escapeHtml(product.searchKeyword || `${product.brand} ${product.model}`)}">复制搜索词</button>
+    </div>
+  </article>`;
+}
+
+function renderTaxonomyTags(product) {
+  const taxonomy = product.taxonomy || {};
+  const tags = [taxonomy.type, taxonomy.designLanguage].filter(Boolean);
+  return tags.length ? `<div class="catalog-tags">${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join('')}</div>` : '';
+}
+
 function renderAccessoryProductLadder(category, ladder) {
   if (!els.accessoryProductLadder || !els.accessoryProductIntro) return;
   const items = ladder?.items || [];
   const isTheft = category.id === 'theft';
-  setText('accessoryProductLabel', isTheft ? '组合防护层' : '优先候选');
+  const isSelectionReference = ladder?.mode === 'selection-reference';
+  setText('accessoryProductLabel', isTheft ? '组合防护层' : isSelectionReference ? '选型参考' : '优先候选');
   setText('accessoryProductTitle', isTheft
     ? '防盗不是三选一：按停车风险把机械阻碍、报警、定位和管理组合起来。'
-    : '从最匹配开始，比较符合核心筛选条件的可选项。');
+    : isSelectionReference
+      ? '用途和类型相符，但国内购买仍待核验的型号资料。'
+      : '从最匹配开始，比较符合核心筛选条件的可核验候选。');
   els.accessoryProductIntro.textContent = ladder?.intro || '当前没有足够可靠的相近产品数据。';
   if (!items.length) {
     els.accessoryProductLadder.innerHTML = '<article class="product-ladder-empty">暂时没有同时符合这些核心筛选条件的产品，请调整条件或先到线下核对。</article>';
@@ -1009,7 +1169,9 @@ function renderAccessoryProductLadder(category, ladder) {
     const product = entry.product;
     const officialUrl = safeProductUrl(product.officialUrl || '');
     const reviewUrl = safeProductUrl(product.reviewUrl || '');
+    const sourceUrl = safeProductUrl(product.sourceUrl || product.marketSignal?.sourceUrl || '');
     const sources = [
+      sourceUrl ? `<a href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener noreferrer">目录来源</a>` : '',
       officialUrl ? `<a href="${escapeHtml(officialUrl)}" target="_blank" rel="noopener noreferrer">品牌资料</a>` : '',
       reviewUrl ? `<a href="${escapeHtml(reviewUrl)}" target="_blank" rel="noopener noreferrer">公开资料</a>` : ''
     ].filter(Boolean).join('');
@@ -1021,9 +1183,11 @@ function renderAccessoryProductLadder(category, ladder) {
       </div>
       <div class="product-ladder-copy">
         <div class="product-ladder-top"><div><small>${escapeHtml(product.sourceType || '公开资料')} · ${escapeHtml(recordTypeLabel(product.recordType))} · 记录可信度${escapeHtml(confidenceLabel[product.confidence] || '待核验')}</small><h4>${escapeHtml(product.brand)}｜${escapeHtml(product.model)}</h4></div><strong>${escapeHtml(product.priceBand || '价格待核验')}</strong></div>
+        ${renderTaxonomyTags(product)}
         <p class="product-ladder-relax"><b>为什么排在这里：</b>${escapeHtml(entry.whyRelaxed)}</p>
         <p><b>适合：</b>${escapeHtml(product.idealFor)}</p>
         <p><b>国内状态：</b>${escapeHtml(product.cnAvailability)}</p>
+        <p><b>核验等级：</b>${escapeHtml(productEvidenceLabel(product))}</p>
         ${product.complianceNote ? `<p><b>合规提醒：</b>${escapeHtml(product.complianceNote)}</p>` : ''}
         <p><b>公开信息摘要：</b>${escapeHtml(product.reviewSummary)}</p>
         <p><b>主要取舍：</b>${escapeHtml(product.compromise)}</p>
@@ -1031,6 +1195,12 @@ function renderAccessoryProductLadder(category, ladder) {
       </div>
     </article>`;
   }).join('');
+}
+
+function productEvidenceLabel(product = {}) {
+  const label = CN_EVIDENCE_LABELS[product.cnEvidenceTier] || '资料来源待核验';
+  const date = product.marketSignal?.observedAt || product.sourceCheckedAt;
+  return date ? `${label} · 核验/快照日期 ${date}` : label;
 }
 
 function safeProductUrl(value) {
@@ -1043,7 +1213,7 @@ function safeProductUrl(value) {
 }
 
 function recordTypeLabel(value) {
-  return ({ exact: '具体型号', series: '系列记录', direction: '选购方向', bundle: '组合方案' })[value] || '候选记录';
+  return ({ exact: '具体型号', series: '系列记录', direction: '选购方向', bundle: '组合方案', archived: '历史/地区记录' })[value] || '候选记录';
 }
 
 function renderAccessoryList(items) {

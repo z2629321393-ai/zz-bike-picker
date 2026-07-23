@@ -1,26 +1,85 @@
 import { recommendProductLadder } from './product-catalog.js';
 
-export const ACCESSORY_STORAGE_KEY = 'zz-bike-picker-v6.4-accessories';
+export const ACCESSORY_STORAGE_KEY = 'zz-bike-picker-v6.5-accessories';
 
 export const REMINDER_CONFIG = {
   promoImage: 'assets/extension-promo.png',
   promoTitle: '开始前，先确认一件事',
   promoText: '这次只回答你所选项目的问题，完成后就能查看建议；其他装备可以以后再测。',
-  spokenLine: '如果想看看我整理的头套、蓝牙耳机或其他骑行装备，也可以到抖音“骑不快的ZZ”的橱窗作参考。这是作者自有橱窗推广，不参与推荐排序；先按自己的使用场景选，合适再买。'
+  spokenLine: '如果你还想看看我整理的头盔、蓝牙耳机或其他骑行装备，可以到抖音“骑不快的ZZ”的橱窗作资料参考。橱窗属于作者自有推广，不参与本站推荐排序；先按使用场景和尺码选，再决定是否购买。'
 };
 
-const q = (id, title, help, options) => ({ id, title, help, options });
+// 每个装备项目都用同一套决策语言：先明确平时用途，再选结构类型，
+// 然后确认身体/车辆适配，最后才谈功能偏好和外观。这样结果页也能清楚
+// 说明“为什么会得到这组候选”，而不是只留下一个模糊的最终结论。
+const QUESTION_STAGE = Object.freeze({
+  usage: '平时用途',
+  helmetType: '盔型 / 类型',
+  headSize: '头围 / 尺码',
+  fit: '头型 / 试戴',
+  priority: '最在意的体验',
+  style: '风格喜好',
+  budget: '预算范围',
+  protection: '手套类型',
+  handFit: '手型 / 尺码',
+  season: '天气 / 季节',
+  garmentType: '服装类型',
+  garmentFocus: '穿着重点',
+  climate: '当地气候',
+  bodyFit: '体型 / 版型',
+  wearing: '穿戴习惯',
+  walk: '下车活动',
+  feel: '操作感偏好',
+  weather: '防水需求',
+  footWidth: '脚型 / 鞋楦',
+  calfFit: '小腿围 / 靴筒',
+  system: '系统类型',
+  road: '主要路况',
+  volume: '实际容量',
+  beam: '光型 / 类型',
+  electric: '车辆电路',
+  control: '控制方式',
+  group: '使用人数',
+  helmetFit: '头盔适配',
+  operation: '操作偏好',
+  parking: '停车环境',
+  value: '车辆价值',
+  anchor: '固定条件',
+  convenience: '日常习惯',
+  look: '风格喜好'
+});
+
+const q = (id, title, help, options, stage = QUESTION_STAGE[id] || '偏好') => ({ id, title, help, options, stage });
 
 export const ACCESSORY_CATEGORIES = [
   {
     id: 'helmet', icon: '盔', title: '帮我选头盔', accent: '安全核心',
-    subtitle: '先看头型与佩戴，再比较通风、风噪、重量和预算。',
+    subtitle: '先选盔型和用途，再按头围、头型、试戴、风格与预算筛选。',
     questions: [
       q('usage', '你平时最常在哪种场景骑行？', '按大多数时候的真实用途选择，不用为一年只有一两次的极端场景买单。', [
         ['city', '城市通勤', '频繁穿脱、低速、短途，便利与通风更重要'],
         ['touring', '长途摩旅', '连续佩戴、高速风噪、颈部负担更重要'],
         ['sport', '跑山/运动骑行', '高速稳定、贴合和上方视野更重要'],
-        ['track', '赛道使用', '低伏视野、气动、固定与双D扣取向更强']
+        ['track', '赛道使用', '低伏视野、气动、固定与双D扣取向更强'],
+        ['offroad', '林道/场地越野', '护目镜、防尘、通风和活动空间更重要；不和赛道混为一类']
+      ]),
+      q('helmetType', '这次想找哪一种盔型？', '盔型先决定视野、下颌覆盖、气动、重量和使用边界；同一品牌也不能把不同盔型混在一起比较。', [
+        ['fullFace', '通勤/街道全盔', '覆盖完整，适合日常道路使用的基础方向'],
+        ['sportFullFace', '运动全盔', '跑山/街车取向，更重视高速稳定与上方视野'],
+        ['raceFullFace', '赛道全盔', '低伏视野、固定和气动优先，日常舒适要让步'],
+        ['modular', '揭面盔 / 可掀盔', '沟通和摘戴方便，但要接受结构、重量与风噪取舍'],
+        ['adv', '拉力盔 / ADV盔', '站姿、通风和护目镜/帽檐兼容取向更强'],
+        ['offroad', '越野盔', '配护目镜和越野强度使用；道路场景要单独核对合规与适配'],
+        ['retroFullFace', '复古全盔', '保留完整下颌覆盖，再选择复古外形'],
+        ['threeQuarter', '3/4盔', '便于日常使用，但下颌覆盖与全盔不同，不能等价比较'],
+        ['openFace', '半盔', '开放感强，但保护范围最有限，明确接受其使用边界']
+      ]),
+      q('headSize', '你的头围大约是多少？', '用软尺绕眉骨上方、耳朵上方一圈测量。头围只用于先筛尺码，不能代替连续试戴。', [
+        ['unknown', '还没量过', '先测量再看品牌尺码表，不直接按平时帽子尺码买'],
+        ['under54', '54cm及以下', '更要确认最小壳体和内衬不会松动'],
+        ['55to56', '55—56cm', '常见尺码区间，仍需按品牌尺码表核验'],
+        ['57to58', '57—58cm', '常见尺码区间，重点确认脸颊和后脑包裹'],
+        ['over59', '59cm及以上', '留意壳体尺寸、夹点和耳机/眼镜空间']
       ]),
       q('fit', '你的头型和试戴情况？', '头围只是尺码起点；头型不合，即使是高价头盔也可能持续压痛。', [
         ['unknown', '完全不知道', '必须先线下连续试戴15—20分钟'],
@@ -50,19 +109,27 @@ export const ACCESSORY_CATEGORIES = [
   },
   {
     id: 'gloves', icon: '套', title: '帮我选手套', accent: '手感与保护',
-    subtitle: '按通勤、跑山、旅行或赛道选择，保护和手感一起看。',
+    subtitle: '先分通勤、跑山、摩旅、轻越野或赛道，再看手型、护腕结构、天气与风格。',
     questions: [
       q('usage', '你主要在哪种强度下骑？', '街道运动和封闭赛道的风险与装备结构不同，请按真实使用强度选择。', [
         ['city', '城市通勤', '频繁穿脱、低速操作、手机和舒适优先'],
         ['touring', '长途摩旅', '长时间舒适、防风防雨和疲劳控制'],
         ['mountain', '跑山/街道运动', '要保护，也要保留刹车和油门细腻感'],
-        ['track', '赛道', '高速摔车风险、长护腕、掌根滑块和固定优先']
+        ['track', '赛道', '高速摔车风险、长护腕、掌根滑块和固定优先'],
+        ['offroad', '林道/轻越野', '防尘、活动性和握把控制优先；不把它当公路赛道使用']
       ]),
       q('protection', '你更偏向哪种保护取向？', '越偏赛道，通常越紧、越硬，也越需要磨合。', [
         ['urban', '轻量通勤型', '短护腕、薄掌心、舒服，但覆盖和固定有限'],
         ['roadSport', '街道运动型', '中/长护腕，保护和手感比较均衡'],
-        ['touring', '旅行防护型', '全天舒适、防风防水，但膜层会损失一点手感'],
+        ['touring', '旅行 / ADV 防护型', '全天舒适、防风防水与轻越野适配优先，但膜层会损失一点手感'],
         ['race', '赛道长护腕型', '保护最强，刚戴时更硬、更紧，低速手感未必舒服']
+      ]),
+      q('handFit', '你的手型和尺码情况？', '量主手掌最宽处的掌围和中指长度；同一标码在不同品牌的掌宽、指长和预弯差异很大。', [
+        ['unknown', '还没量过', '先量掌围和中指长度，再对照具体品牌尺码表'],
+        ['narrow', '手掌偏窄', '注意指根、掌心不能留下明显空量'],
+        ['regular', '常规手型', '仍要确认掌宽、指长和虎口活动'],
+        ['wide', '手掌偏宽/手背高', '重点看拳峰、掌宽和腕口是否顶住'],
+        ['longFingers', '手指偏长', '重点排除指尖顶住、弯指受限']
       ]),
       q('feel', '你对握把反馈有多敏感？', '厚重手套会削弱油门、刹车和按键反馈，需要在保护与操作感之间取舍。', [
         ['thin', '极度在意细腻手感', '希望刹车点、油门和离合都很清晰'],
@@ -86,19 +153,46 @@ export const ACCESSORY_CATEGORIES = [
   },
   {
     id: 'armor', icon: '甲', title: '帮我选骑行服/护具', accent: '穿戴率与覆盖',
-    subtitle: '气候、穿戴频率、耐磨与护具固定，决定你会不会真的穿。',
+    subtitle: '区分网眼、拉力服、皮衣、骑行裤与护甲衬衣，再看体型、气候与骑姿。',
     questions: [
       q('usage', '主要骑行场景？', '按80%的真实使用选。', [
         ['commute', '城市通勤', '快穿脱、透气、日常外观'],
         ['touring', '长途摩旅', '全天舒适、温差、防雨和储物'],
         ['sport', '跑山/运动骑行', '贴身固定、耐磨、上下装连接'],
-        ['track', '赛道', '连体/分体皮衣、滑块和高覆盖优先']
+        ['track', '赛道', '连体/分体皮衣、滑块和高覆盖优先'],
+        ['offroad', '林道/轻越野', '活动性、耐磨外层和护具稳定优先；不与公路赛道混为一类']
+      ]),
+      q('garmentType', '这次想优先看哪种骑行服/下装结构？', '“骑行服”不是一个单一类别；拉力服、夏季网眼、分体皮衣、连体皮衣、骑行裤和护甲衬衣的边界不同。', [
+        ['meshJacket', '夏季网眼骑行服', '大面积通风，适合热天；防雨和低温要另做分层'],
+        ['textileSuit', '日常骑行服 + 骑行裤', '分体织物上下装，兼顾通勤与一般长途'],
+        ['advTouring', 'ADV / 拉力摩旅服', '分层、防雨、储物与长途活动性优先'],
+        ['twoPieceLeather', '分体皮衣 / 街道运动皮裤', '街道运动和跑山取向，重点看上下装连接'],
+        ['onePieceLeather', '连体皮衣', '赛道/高强度取向，保护与耐磨优先，日常便利让步'],
+        ['armoredShirt', '护甲衬衣 + 耐磨外层', '方便叠穿，必须同时确认外层耐磨与护具稳定'],
+        ['retroLeather', '复古皮衣', '复古/巡航风格，注意护具位置、耐磨与炎热天气'],
+        ['ridingPants', '骑行裤 / 下装优先', '纺织骑行裤、皮裤或夏季下装；重点核对膝髋护具与裤脚搭接'],
+        ['protectiveJeans', '防护牛仔裤', '日常外观友好，重点核对膝髋护具和耐磨区域']
+      ]),
+      q('garmentFocus', '你希望它优先解决什么？', '这项和“盔型/结构”分开问：同一件衣服可能很适合夏季，也可能更适合全天候摩旅。', [
+        ['commute', '上班/短途好穿', '方便、低调、提高每天穿戴率'],
+        ['summerMesh', '夏天不闷', '通风和速干优先，同时接受雨天与低温边界'],
+        ['allSeasonWaterproof', '四季/雨天管理', '内胆、防水层和分层能力优先'],
+        ['advTouring', '摩旅/拉力活动性', '温差、储物、站姿和长时间舒适优先'],
+        ['retro', '复古/巡航搭配', '皮革质感和日常比例优先，仍需保留护具定位'],
+        ['sportRoad', '跑山/街道运动', '贴身、耐磨、护具固定和上下装连接优先'],
+        ['track', '赛道使用', '连体/分体皮衣、护背和高覆盖优先']
       ]),
       q('climate', '当地气候？', '太热穿不住，买再高级也等于没穿。', [
         ['hot', '炎热潮湿', '大面积网眼和快干'],
         ['mild', '温和', '多用途织物或皮衣'],
         ['rain', '雨水多', '分层防水和快干'],
         ['cold', '低温多', '防风、保暖和内层管理']
+      ]),
+      q('bodyFit', '你的体型/版型需求更接近哪种？', '胸围、腰围、臀围、臂长和骑姿都会影响护具是否跑位；这个回答只做初筛，不能代替试穿。', [
+        ['unknown', '还没量过', '先量胸腰臀和臂长，再对照品牌尺码表'],
+        ['slim', '偏瘦 / 四肢较长', '注意护具是否贴住关节、袖口是否过长'],
+        ['regular', '常规体型', '重点看坐上车后护具是否仍在正确位置'],
+        ['broad', '肩背宽 / 胸腰较大', '重点排除肩肘顶住、腰腹勒紧或护具外翻']
       ]),
       q('wearing', '你能接受多复杂的穿戴流程？', '真正愿意每次穿上，才算有效的安全装备。', [
         ['fast', '1分钟内', '护甲衬衣/轻量骑行服'],
@@ -122,13 +216,26 @@ export const ACCESSORY_CATEGORIES = [
   },
   {
     id: 'boots', icon: '靴', title: '帮我选骑行靴', accent: '脚踝与操控',
-    subtitle: '在脚踝保护、换挡脚感、防水和步行之间找平衡。',
+    subtitle: '先按用途选鞋型，再看脚型、靴筒、换挡脚感、防水与步行。',
     questions: [
       q('usage', '主要场景？', '通勤、摩旅、跑山、赛道和越野是不同鞋。', [
         ['city', '城市通勤', '走路、穿脱和日常外观'],
         ['touring', '长途摩旅', '全天舒适、防水和脚踝支撑'],
         ['sport', '跑山/街道运动', '中高筒、抗扭和换挡手感'],
-        ['track', '赛道', '高筒、胫骨、铰链和滑块保护']
+        ['track', '赛道', '高筒、胫骨、铰链和滑块保护'],
+        ['offroad', '林道/场地越野', '越野靴、抗扭、护胫和护目镜/护膝搭配；不与赛道靴混为一类']
+      ]),
+      q('footWidth', '你的脚型/鞋楦更接近哪种？', '用平时运动鞋号码只能做起点；宽脚、脚背高和长脚趾要分别检查鞋头、脚踝和换挡区。', [
+        ['unknown', '还没量过', '先按品牌鞋楦试穿，站立和骑姿都要确认'],
+        ['narrow', '脚偏窄 / 脚背低', '避免鞋腔过大导致脚跟抬起或脚踝晃动'],
+        ['regular', '常规脚型', '仍要确认脚趾余量、后跟锁定和换挡区'],
+        ['wide', '脚偏宽 / 脚背高', '重点看鞋头宽度、脚背压迫和拉链闭合']
+      ]),
+      q('calfFit', '小腿围和裤脚搭配情况？', '高筒靴要和骑行裤、护膝和袜子一起试；靴筒能拉上不等于骑姿舒适。', [
+        ['unknown', '还没确认', '试穿时带上常用骑行裤和护具'],
+        ['slim', '小腿偏细', '确认靴筒收紧后不松垮、不磨踝'],
+        ['regular', '常规小腿围', '确认靴口与裤脚搭接不顶不漏'],
+        ['wide', '小腿较粗 / 常穿护膝', '重点看靴筒调节、拉链余量和护具兼容']
       ]),
       q('walk', '下车后要走多久？', '赛道靴保护高，但长时间步行通常像穿硬壳。', [
         ['little', '几乎不走', '可以更硬、更高筒'],
@@ -317,16 +424,38 @@ export function saveAccessorySession(session) { localStorage.setItem(ACCESSORY_S
 export function clearAccessorySession() { localStorage.removeItem(ACCESSORY_STORAGE_KEY); }
 export function categoryById(id) { return ACCESSORY_CATEGORIES.find((item) => item.id === id) || null; }
 
+// 让结果页和可复制摘要回显用户真正做过的选择。产品目录可以逐步补充更多
+// fit 标签；即便某个新标签暂时没有覆盖到所有旧产品，也不会因此伪造“精确
+// 命中”，用户仍能一眼看见推荐所依据的用途、类型、适配和风格。
+export function accessorySelectionItems(categoryOrId, answers = {}) {
+  const category = typeof categoryOrId === 'string' ? categoryById(categoryOrId) : categoryOrId;
+  if (!category) return [];
+  return category.questions.map((question) => {
+    const option = question.options.find(([value]) => value === answers[question.id]);
+    return option ? { stage: question.stage || '偏好', label: option[1], questionId: question.id } : null;
+  }).filter(Boolean);
+}
+
+export function accessorySelectionSummary(categoryOrId, answers = {}) {
+  return accessorySelectionItems(categoryOrId, answers)
+    .map((item) => `${item.stage}：${item.label}`)
+    .join(' · ');
+}
+
 export function evaluateAccessory(categoryId, answers = {}, vehicleResult = null) {
   const evaluators = { helmet: evaluateHelmet, gloves: evaluateGloves, armor: evaluateArmor, boots: evaluateBoots, luggage: evaluateLuggage, lights: evaluateLights, intercom: evaluateIntercom, theft: evaluateTheft };
   const result = evaluators[categoryId]?.(answers, vehicleResult);
   if (!result) throw new Error(`Unknown accessory category: ${categoryId}`);
   const productLadder = recommendProductLadder(categoryId, answers, result);
+  const category = categoryById(categoryId);
+  const selectionItems = accessorySelectionItems(category, answers);
   return {
     categoryId,
     ...result,
     ...buildAccessoryMarketProfile(categoryId, answers, result),
     productLadder,
+    selectionItems,
+    selectionSummary: accessorySelectionSummary(category, answers),
     spokenLine: REMINDER_CONFIG.spokenLine
   };
 }
@@ -336,11 +465,12 @@ export function accessoryResultCopy(category, result) {
   const ladderHeading = category.id === 'theft'
     ? `组合防护层（${ladderItems.length}层，按停车风险叠加）：`
     : `符合核心筛选条件的候选（${ladderItems.length}项）：`;
-  const recordTypeText = { exact: '具体型号', series: '系列', direction: '选购方向', bundle: '组合方案' };
+  const recordTypeText = { exact: '具体型号', series: '系列', direction: '选购方向', bundle: '组合方案', archived: '历史/地区记录' };
   const confidenceText = { high: '较高', medium: '中等', low: '较低' };
   return [
     `【骑不快的ZZ｜${category.title}】`,
     `推荐方向：${result.headline}`,
+    result.selectionSummary ? `你的筛选：${result.selectionSummary}` : '',
     '', result.summary,
     '', `真实使用感：${result.feelNote}`,
     `外观建议：${result.styleNote}`,
@@ -388,6 +518,11 @@ function evaluateHelmet(a) {
     r.headline = '街道运动全盔：高速稳定和贴合优先，同时兼顾日常使用';
     r.metrics = metricSet({ 安全固定: 93, 长途舒适: 68, 风噪控制: 70, 通风: 84, 外观协调: 88 });
     r.tradeoffs.push('运动盔包裹更紧、风道更多，日常穿脱和安静程度未必最好');
+  } else if (a.usage === 'offroad') {
+    r.headline = '越野盔方向：护目镜、防尘、通风与非铺装活动性优先';
+    r.summary = '林道和场地越野的头盔、护目镜与颈部装备需要作为一套试戴；它的开口、风道和高速体验不能按公路赛道盔来理解。';
+    r.metrics = metricSet({ 安全固定: 94, 长途舒适: 62, 风噪控制: 48, 通风: 94, 外观协调: 82 });
+    r.tradeoffs.push('越野盔更重视活动与通风；高速道路的风噪、气动和镜片防护体验需按具体产品与使用场景单独核对');
   } else if (a.usage === 'track') {
     r.headline = '赛道取向全盔：低伏视野、气动和固定最强，日常舒适不是第一位';
     r.metrics = metricSet({ 安全固定: 98, 长途舒适: 55, 风噪控制: 60, 通风: 90, 外观协调: 92 });
@@ -403,8 +538,71 @@ function evaluateHelmet(a) {
   if (a.priority === 'weight') r.priorities.push('看整盔重心和颈部感受，不只看克数');
   if (a.priority === 'heat') r.priorities.push('确认低速也有有效进排风，高速风道不直吹眼睛');
   if (a.priority === 'glasses') r.checklist.push('镜腿通道、耳机扬声器和眼镜同时安装后仍不压耳');
+  applyHelmetType(r, a);
+  applyHeadSizeGuidance(r, a);
   r.styleNote = styleHelmet(a.style);
   return finalize(r);
+}
+
+function applyHelmetType(r, a) {
+  const labels = {
+    fullFace: '通勤/街道全盔',
+    sportFullFace: '运动全盔',
+    raceFullFace: '赛道全盔',
+    modular: '揭面盔',
+    adv: '拉力/ADV盔',
+    offroad: '越野盔',
+    retroFullFace: '复古全盔',
+    threeQuarter: '3/4盔',
+    openFace: '半盔'
+  };
+  if (!a.helmetType) return;
+  r.priorities.unshift(`先在“${labels[a.helmetType] || '所选盔型'}”内比较具体型号，再核对头型、头围、镜片/护目镜和中国道路使用要求`);
+  if (a.helmetType === 'sportFullFace') {
+    r.headline = '运动全盔：跑山稳定、上方视野和贴合优先，兼顾街道使用';
+    r.summary = '运动全盔适合把高速稳定、贴合和上方视野放在前面的人。先确认头型、视野与固定，再比较通风、重量和外观。';
+    r.tradeoffs.push('运动全盔通常比旅行盔更紧、更注重风道和气动，日常安静与便利未必最好');
+  } else if (a.helmetType === 'raceFullFace') {
+    r.headline = '赛道全盔：低伏视野、固定与气动优先，日常舒适不是第一位';
+    r.summary = '赛道全盔把低伏视野、固定与气动放在前面；它适合明确的封闭场地或高强度使用，不代表日常更舒服。';
+    r.tradeoffs.push('赛道全盔更紧、穿脱更费事，通勤风噪和便利性通常要让步');
+    if (a.usage !== 'track') r.avoid.push('仅为了赛车外观，把赛道全盔当作所有日常场景的默认答案');
+  } else if (a.helmetType === 'modular') {
+    r.headline = '揭面盔：摘戴和沟通方便，仍要把锁止、重量、风噪和合头做对';
+    r.summary = '揭面盔适合频繁摘戴、沟通和旅行便利需求；具体型号的锁止、佩戴重量、风噪和头型适配都要实际确认。';
+    r.tradeoffs.push('可掀结构带来便利，也可能增加重量、风噪和结构复杂度；按具体型号核对锁止与道路使用状态');
+    r.checklist.push('开合、锁止和下颌部件可戴手套确认，骑行前按说明处于正确锁定状态');
+  } else if (a.helmetType === 'adv') {
+    r.headline = '拉力/ADV盔：站姿视野、通风和多路况适配优先';
+    r.summary = '拉力/ADV盔兼顾站姿视野、通风、护目镜/帽檐兼容与多路况使用。高速风噪、帽檐受风和头型仍要靠实骑或连续试戴确认。';
+    r.tradeoffs.push('帽檐、风道和护目镜兼容更有特点，高速风噪、抬头受风与重量要实骑确认');
+    r.checklist.push('站姿、风挡后高速和低头看仪表时都检查帽檐受风、视野和护目镜密封');
+  } else if (a.helmetType === 'offroad') {
+    r.headline = '越野盔：护目镜、通风和非铺装活动性优先，使用边界要单独确认';
+    r.summary = '越野盔更重视护目镜、通风与非铺装活动性。它与全盔的风道、开口和高速体验不同，使用场景及具体产品标识要单独核对。';
+    r.tradeoffs.push('越野盔的风道和开口适合高活动量；高速道路风噪、气动和镜片防护体验与全盔不同');
+    r.priorities.push('护目镜、防尘、颈托和下颌部位的实际活动空间需整套试戴；道路场景按当地规则和具体产品标识核验');
+  } else if (a.helmetType === 'retroFullFace') {
+    r.headline = '复古全盔：完整下颌覆盖与复古比例一起看';
+    r.summary = '复古全盔先保留完整下颌覆盖，再选择外形、镜片和内衬质感；不能只凭复古造型忽略头型、视野和固定。';
+    r.tradeoffs.push('复古外形不等于牺牲视野和固定；镜片、防雾、风噪和耳机空间要按具体型号试戴');
+  } else if (a.helmetType === 'threeQuarter') {
+    r.headline = '3/4盔：开放感和日常便利优先，明确接受下颌覆盖边界';
+    r.summary = '3/4盔适合重视开放感与日常便利的人，但它与全盔的下颌覆盖不同；先明确使用边界，再比较头型、视野和固定。';
+    r.tradeoffs.push('3/4盔与全盔的下颌覆盖不同，不能把它们当作同一保护范围来比较');
+    r.avoid.push('把3/4盔的开放感误解为和全盔等价的覆盖与高速防护');
+  } else if (a.helmetType === 'openFace') {
+    r.headline = '半盔：开放感最强，但保护范围最有限，明确接受使用边界';
+    r.summary = '半盔强调开放感和轻便，但不提供完整面部与下颌覆盖；应先接受保护范围的差异，再比较合头、固定和具体道路使用要求。';
+    r.tradeoffs.push('半盔不提供完整面部和下颌覆盖，不应与全盔作为等价安全选择比较');
+    r.avoid.push('只因轻便或造型忽略半盔与全盔的覆盖差异');
+  }
+}
+
+function applyHeadSizeGuidance(r, a) {
+  if (a.headSize === 'unknown') r.priorities.unshift('先用软尺测头围并按具体品牌尺码表初筛；头围数字不能代替连续试戴');
+  if (a.headSize === 'under54') r.checklist.push('确认最小尺码的壳体与内衬能稳定包裹，摇头时不能明显滞后');
+  if (a.headSize === 'over59') r.checklist.push('确认大尺码壳体、耳机/眼镜空间和后脑/额头没有集中压点');
 }
 
 function evaluateGloves(a) {
@@ -415,6 +613,7 @@ function evaluateGloves(a) {
 
   const race = a.protection === 'race' || a.usage === 'track';
   const roadSport = a.protection === 'roadSport' || a.usage === 'mountain';
+  const adventure = a.usage === 'offroad';
   const touring = a.protection === 'touring' || a.usage === 'touring';
   const urban = a.protection === 'urban' || a.usage === 'city';
 
@@ -432,6 +631,12 @@ function evaluateGloves(a) {
     r.metrics = metricSet({ 防护: 86, 舒适: 76, 握持感: 82, 通风: 72, 美观: 90 });
     r.feelNote = '比赛道手套更贴近日常握把手感，厚重的隔离感更少；仍保留保护结构，也更容易感知离合、刹车和油门细节。';
     r.tradeoffs.push('保护上限不如纯赛道手套，但实际穿戴率和操作感通常更高');
+  } else if (adventure) {
+    r.headline = 'ADV / 轻越野手套：活动性、防尘和握把控制优先';
+    r.summary = '林道和轻越野需要的手套要兼顾握把控制、活动空间与防护；它不是赛道长护腕的替代，也不能只靠薄手套承担越野摔车风险。';
+    r.metrics = metricSet({ 防护: 78, 舒适: 80, 握持感: 84, 通风: 82, 美观: 76 });
+    r.tradeoffs.push('越野/ADV 取向通常更强调灵活和通风；极端天气、防水和公路高速耐磨需要按实际路线另做取舍');
+    r.priorities.push('戴上护目镜、护甲和常用把套后，确认手背不顶、指尖不顶、握把和离合操作仍自然');
   } else if (touring) {
     r.headline = '旅行长护腕手套：全天舒适和防风防雨优先';
     r.metrics = metricSet({ 防护: 76, 舒适: 90, 握持感: 68, 通风: a.season === 'hot' ? 74 : 52, 美观: 72 });
@@ -450,8 +655,21 @@ function evaluateGloves(a) {
   if (a.feel === 'breakin') r.checklist.push('磨合后应变贴手；若持续麻、顶指或虎口拉扯，说明不是磨合问题而是版型不合');
   if (a.season === 'cold') r.tradeoffs.push('保暖层会明显增加厚度并降低握把反馈，必要时可用加热手把分担保暖任务');
   if (a.season === 'rain') r.priorities.push('湿手抓握、防水膜固定和袖口防灌水比触屏更重要');
+  applyHandFitGuidance(r, a);
   r.styleNote = styleGloves(a.style, race);
   return finalize(r);
+}
+
+function applyHandFitGuidance(r, a) {
+  if (a.handFit === 'unknown') {
+    r.priorities.unshift('量主手掌围和中指长度；按具体品牌尺码表初筛后，仍要实际握把、捏刹车和弯指试戴');
+  } else if (a.handFit === 'narrow') {
+    r.checklist.push('手掌偏窄时，确认掌心没有明显褶皱，指根和虎口不会在握把时堆料');
+  } else if (a.handFit === 'wide') {
+    r.checklist.push('手掌偏宽/手背高时，确认拳峰、掌宽和腕口不顶手；不能靠买大一号解决');
+  } else if (a.handFit === 'longFingers') {
+    r.checklist.push('手指偏长时，握把和捏刹车都不能顶到指尖；指节护壳应落在正确位置');
+  }
 }
 
 function evaluateArmor(a) {
@@ -471,6 +689,11 @@ function evaluateArmor(a) {
     r.headline = '街道运动皮衣/耐磨织物：贴身固定和上下装连接优先';
     r.metrics = metricSet({ 撞击保护: 88, 耐磨: 90, 舒适: 65, 穿脱便利: 55, 美观: 91 });
     r.tradeoffs.push('版型更贴、保护更高，但热、紧、日常走路和穿脱更麻烦');
+  } else if (a.usage === 'offroad') {
+    r.headline = '林道 / 轻越野叠穿系统：活动性、耐磨外层和护具稳定优先';
+    r.metrics = metricSet({ 撞击保护: 84, 耐磨: 84, 舒适: 74, 穿脱便利: 66, 美观: 72 });
+    r.tradeoffs.push('轻越野需要活动空间和通风，但护甲衬衣、耐磨外层、护膝/护肘仍要在骑姿和站姿中稳定固定');
+    r.priorities.push('把护甲、外层、护膝和常用背包一起试穿；不能把公路赛道皮衣或日常网眼服直接当成越野套装');
   } else if (a.usage === 'track') {
     r.headline = '赛道皮衣系统：保护和耐磨最高，舒适与便利明显让步';
     r.metrics = metricSet({ 撞击保护: 98, 耐磨: 98, 舒适: 42, 穿脱便利: 25, 美观: 96 });
@@ -481,7 +704,72 @@ function evaluateArmor(a) {
   if (a.priority === 'ugly') r.styleNote = '优先修身版型、隐藏式护具和低调配色；但护具不能为了显瘦被挤出关节位置。';
   else r.styleNote = styleArmor(a.look);
   if (a.wearing === 'fast') r.avoid.push('穿戴流程过于复杂、导致日常使用频率很低的完整套装');
+  applyArmorGarmentType(r, a);
+  applyArmorFitGuidance(r, a);
   return finalize(r);
+}
+
+function applyArmorGarmentType(r, a) {
+  const type = a.garmentType;
+  if (type === 'meshJacket') {
+    r.headline = '夏季网眼骑行服：先把高温穿戴率、护具固定和耐磨层做对';
+    r.tradeoffs.push('网眼服更适合炎热环境，但防雨、低温和高速防风能力需要独立分层补足');
+    r.priorities.unshift('检查网眼区域之外的高磨损区、肩肘背护具位置和夏季骑姿下的固定性');
+  } else if (type === 'textileSuit') {
+    r.headline = '分体织物骑行服 + 骑行裤：日常与一般长途的平衡方案';
+    r.tradeoffs.push('分体织物上下装便于日常使用，但耐磨、护具固定和上下装连接需逐件核对');
+    r.priorities.unshift('优先用常见骑姿试上衣和骑行裤，确认腰部、膝部和肘部护具不会跑位');
+  } else if (type === 'advTouring') {
+    r.headline = 'ADV / 拉力摩旅服：分层、防雨、储物和长时间活动性优先';
+    r.tradeoffs.push('层数、口袋和防水结构越多，重量、体积与穿脱复杂度越高');
+    r.priorities.unshift('确认站姿、坐姿和加内胆后护具仍在关节中心；防水层、裤脚和手套形成完整搭接');
+  } else if (type === 'twoPieceLeather') {
+    r.headline = '分体皮衣 / 皮裤：街道运动耐磨与上下装连接优先';
+    r.tradeoffs.push('皮革贴身、耐磨和护具固定更强，但炎热、雨天、走路和穿脱会更不方便');
+    r.priorities.unshift('确认上衣和裤子的连接拉链、骑姿下的肩肘膝护具以及内搭空间');
+  } else if (type === 'onePieceLeather') {
+    r.headline = '连体皮衣：赛道/高强度骑行取向，保护、耐磨和固定优先';
+    r.tradeoffs.push('连体皮衣的高覆盖以热、重、走路不便和穿脱慢为代价，不是日常通勤的轻松答案');
+    r.priorities.unshift('坐上车后再判断合身：护具应落在肩肘膝髋背的正确位置，必要时找专业修改');
+    if (a.usage !== 'track' && a.garmentFocus !== 'track') r.avoid.push('只为外观买连体皮衣，却没有接受日常穿戴、雨天和下车活动的限制');
+  } else if (type === 'armoredShirt') {
+    r.headline = '护甲衬衣 + 耐磨外层：便于叠穿，但两层保护都要核对';
+    r.tradeoffs.push('护甲衬衣本身不等于完整耐磨外层；外层过松也可能让护具在骑姿中偏移');
+    r.priorities.unshift('确认衬衣把护具固定在关节中心，外层同时具备足够耐磨与天气管理能力');
+  } else if (type === 'retroLeather') {
+    r.headline = '复古皮衣：风格和耐磨并重，重点是护具位置与高温穿戴率';
+    r.tradeoffs.push('复古皮衣的质感通常伴随更热、更重和雨天保养成本；版型不能只看站立时好看');
+    r.priorities.unshift('确认肩肘背护具可调且骑姿不跑位，袖口、裤型与手套/靴子搭配不露缝');
+  } else if (type === 'ridingPants') {
+    r.headline = '骑行裤 / 下装优先：先把膝髋护具、耐磨区和裤脚搭接做对';
+    r.tradeoffs.push('下装好穿不代表保护充分；不同面料、护具位置和裤脚结构会明显影响炎热、雨天和步行体验');
+    r.priorities.unshift('坐上车并屈膝确认膝髋护具仍覆盖正确位置，检查高磨损区、腰部固定和裤脚与靴子的搭接');
+  } else if (type === 'protectiveJeans') {
+    r.headline = '防护牛仔裤：日常外观友好，重点看膝髋护具和耐磨区域';
+    r.tradeoffs.push('像普通牛仔裤的版型更容易日常穿，但覆盖、耐磨和护具固定上限需按具体产品确认');
+    r.priorities.unshift('坐上车并屈膝确认膝髋护具仍覆盖正确位置，检查高磨损区和裤脚与靴子的搭接');
+  }
+
+  const focus = {
+    commute: '上班/短途优先：控制穿脱步骤和日常比例，确保你愿意每天穿上。',
+    summerMesh: '高温优先：把通风、快干和浅色作为重点，防雨/保暖层改为按需携带。',
+    allSeasonWaterproof: '全天候优先：核对防水层位置、透气、内胆、袖口和裤脚搭接，而不是只看“防水”标签。',
+    advTouring: '摩旅/拉力优先：站姿、储物、分层和全天活动性要在实际骑姿中试穿。',
+    retro: '复古搭配优先：保留版型与皮革比例，同时不牺牲护具位置和耐磨边界。',
+    sportRoad: '跑山/街道运动优先：贴身固定、耐磨、高磨损区和上下装连接优先。',
+    track: '赛道优先：按场地规则核对连体/分体连接、护背、滑块和合身程度。'
+  };
+  if (a.garmentFocus && focus[a.garmentFocus]) r.priorities.push(focus[a.garmentFocus]);
+}
+
+function applyArmorFitGuidance(r, a) {
+  if (a.bodyFit === 'unknown') {
+    r.priorities.unshift('量胸围、腰围、臀围和臂长；按品牌尺码表初筛后，用骑姿连续试穿确认护具位置');
+  } else if (a.bodyFit === 'slim') {
+    r.checklist.push('偏瘦或四肢较长时，确认袖肘和膝部护具不下滑，腰部收紧后也不露出后背');
+  } else if (a.bodyFit === 'broad') {
+    r.checklist.push('肩背宽、胸腰较大时，确认抬臂和前倾不勒肩、不顶肘，护具也不会被挤到关节外侧');
+  }
 }
 
 function evaluateBoots(a) {
@@ -502,6 +790,11 @@ function evaluateBoots(a) {
     r.metrics = metricSet({ 脚踝保护: 99, 步行舒适: 28, 换挡脚感: 72, 防水: 10, 美观: 96 });
     r.feelNote = '脚踝活动会受限制，换挡需要重新适应；它以摔车保护为主，不适合长时间步行。';
     r.tradeoffs.push('保护最高，但走路累、穿脱慢、夏天热，日常通勤并不舒服');
+  } else if (a.usage === 'offroad') {
+    r.headline = '越野 / 林道靴：抗扭、护胫和站姿活动优先，不与赛道靴混为一类';
+    r.metrics = metricSet({ 脚踝保护: 96, 步行舒适: 44, 换挡脚感: 62, 防水: 54, 美观: 80 });
+    r.feelNote = '越野靴在站姿、护膝和脚踏受力时更有支撑，但更硬、更高、走路和换挡需要适应。';
+    r.tradeoffs.push('越野抗扭和护胫能力以体积、硬度和步行便利为代价；公路高速与赛道需求要按具体用途另看');
   } else if (a.usage === 'city') {
     r.headline = '城市骑行鞋：步行与日常搭配优先，同时接受保护上限';
     r.metrics = metricSet({ 脚踝保护: 62, 步行舒适: 94, 换挡脚感: 90, 防水: 45, 美观: 92 });
@@ -510,8 +803,26 @@ function evaluateBoots(a) {
   if (a.feel === 'sensitive') r.priorities.push('优先薄鞋头、清晰前掌弯折和适合原车换挡杆高度');
   if (a.feel === 'protect') r.tradeoffs.push('抗扭越强，脚感越硬；不能用“像运动鞋一样软”作为评价标准');
   if (a.weather === 'yes') r.checklist.push('防水膜、鞋舌结构和裤脚搭接必须完整');
+  applyBootFitGuidance(r, a);
   r.styleNote = styleBoots(a.style);
   return finalize(r);
+}
+
+function applyBootFitGuidance(r, a) {
+  if (a.footWidth === 'unknown') {
+    r.priorities.unshift('按品牌鞋楦试穿；站立、屈膝、上车换挡和踩后刹都要确认，不只看平时运动鞋号码');
+  } else if (a.footWidth === 'narrow') {
+    r.checklist.push('脚偏窄/脚背低时，确认后跟锁定和脚踝支撑，不让鞋腔内横向晃动');
+  } else if (a.footWidth === 'wide') {
+    r.checklist.push('脚偏宽/脚背高时，确认鞋头、脚背和拉链不顶压；不能因挤脚直接买过长的尺码');
+  }
+  if (a.calfFit === 'unknown') {
+    r.checklist.push('高筒靴要与常用骑行裤、护膝和袜子一起试，确认靴口搭接与调节余量');
+  } else if (a.calfFit === 'slim') {
+    r.checklist.push('小腿偏细时，确认靴筒收紧后不松垮、不磨踝，也不会影响裤脚搭接');
+  } else if (a.calfFit === 'wide') {
+    r.checklist.push('小腿较粗或常穿护膝时，确认靴筒调节、拉链余量和护具兼容，不能硬拉闭合');
+  }
 }
 
 function evaluateLuggage(a, vehicleResult) {
@@ -686,18 +997,34 @@ function helmetMarket(a, result) {
   }
   if (a.usage === 'track') base.searchKeywords.unshift('赛道全盔 双D扣 低伏视野');
   if (a.usage === 'touring') base.searchKeywords.unshift('摩旅全盔 轻量 风噪');
+  const helmetTypeKeyword = {
+    fullFace: '摩托车通勤全盔 头型 试戴',
+    sportFullFace: '摩托车运动全盔 跑山 试戴',
+    raceFullFace: '摩托车赛道全盔 双D扣 低伏视野',
+    modular: '摩托车揭面盔 锁止 头型 试戴',
+    adv: '摩托车ADV拉力盔 护目镜 帽檐 试戴',
+    offroad: '摩托车越野盔 护目镜 尺码',
+    retroFullFace: '摩托车复古全盔 头型 试戴',
+    threeQuarter: '摩托车3/4盔 头型 尺码',
+    openFace: '摩托车半盔 头型 尺码'
+  }[a.helmetType];
+  if (helmetTypeKeyword) base.searchKeywords.unshift(helmetTypeKeyword);
+  if (a.headSize && a.headSize !== 'unknown') base.searchKeywords.push(`摩托车头盔 ${a.headSize === 'under54' ? '54cm以下' : a.headSize === '55to56' ? '55-56cm' : a.headSize === '57to58' ? '57-58cm' : '59cm以上'} 尺码表`);
   return base;
 }
 
 function glovesMarket(a, result) {
   const race = a.protection === 'race' || a.usage === 'track';
   const road = a.protection === 'roadSport' || a.usage === 'mountain';
+  const offroad = a.usage === 'offroad';
   const touring = a.protection === 'touring' || a.usage === 'touring';
   const urban = a.protection === 'urban' || a.usage === 'city';
   const searchKeywords = race
     ? ['摩托车赛道长护腕手套 掌根滑块', '赛道手套 小指联动 双腕带', '摩托车长护腕手套 尺码表']
     : road
       ? ['街道运动手套 长护腕 掌根滑块', '跑山骑行手套 皮革 预弯', '摩托车手套 握持感']
+      : offroad
+        ? ['ADV轻越野手套 护腕 防尘', '林道骑行手套 握把 护目镜', '摩托车手套 掌围 中指长度 尺码表']
       : touring
         ? ['摩旅防水手套 长护腕', '摩托车旅行手套 防风 防雨', '骑行手套 湿手防滑']
         : ['夏季通勤骑行手套 透气', '轻量摩托车手套 掌根耐磨', '摩托车手套 短护腕']
@@ -705,16 +1032,38 @@ function glovesMarket(a, result) {
     budgetAdvice: race ? '赛道手套不能只压价格：掌根滑块、腕部固定、皮料和版型不到位，外形再像赛道也没有意义。' : '街道和通勤优先买一副真正愿意长期戴、握把自然、腕带可靠的手套，不必为了最高赛道等级牺牲穿戴率。',
     brandHints: ['先看掌根滑块、腕带、指长/掌宽版型和售后尺码政策，再看品牌和硬壳外观。', '同一品牌不同系列的手感差异可能很大，电商评价要重点看“掌宽、指长、是否顶指、虎口是否拉扯”。'],
     priceWarning: race ? '价格异常低的“赛道外形手套”可能只有外观硬壳，未必有可靠掌根滑块、腕部固定和耐磨结构。' : '价格异常低的手套可能在缝线、掌心耐磨和腕带固定上压缩成本；不能只看拳峰硬壳。',
-    searchKeywords
+    searchKeywords: a.handFit && a.handFit !== 'unknown'
+      ? [...searchKeywords, '摩托车手套 掌围 中指长度 尺码表']
+      : searchKeywords
   };
 }
 
 function armorMarket(a) {
+  const garmentTypeKeyword = {
+    meshJacket: '夏季网眼骑行服 肩肘背 护具',
+    textileSuit: '摩托车骑行服 骑行裤 分体 耐磨',
+    advTouring: 'ADV拉力摩旅服 分层 防水 护具',
+    twoPieceLeather: '摩托车分体皮衣 皮裤 连接拉链',
+    onePieceLeather: '摩托车连体皮衣 赛道 护背',
+    armoredShirt: '摩托车护甲衬衣 耐磨外层',
+    retroLeather: '摩托车复古皮衣 护具 耐磨',
+    ridingPants: '摩托车骑行裤 膝髋护具 耐磨',
+    protectiveJeans: '摩托车骑行牛仔裤 膝髋护具 耐磨'
+  }[a.garmentType];
+  const searchKeywords = a.usage === 'track'
+    ? ['摩托车赛道皮衣 护背 连体', '摩托车分体皮衣 上下连接']
+    : a.usage === 'offroad'
+      ? ['林道轻越野骑行服 护甲 耐磨外层', 'ADV拉力骑行服 护具 站姿']
+    : a.usage === 'touring'
+      ? ['摩旅骑行服 防水 分层 护具', 'ADV骑行服 夏季 网眼']
+      : ['摩托车骑行服 护具 耐磨', '夏季网眼骑行服 肩肘背'];
+  if (garmentTypeKeyword) searchKeywords.unshift(garmentTypeKeyword);
+  if (a.bodyFit && a.bodyFit !== 'unknown') searchKeywords.push('骑行服 胸围 腰围 臀围 骑姿 试穿');
   return {
     budgetAdvice: a.usage === 'track' ? '赛道皮衣和护具要把合身修改、内搭和维护成本一起算，不能只看吊牌价。' : '先保证肩肘背护具位置稳定、外层耐磨和夏季愿意穿，再逐步升级。',
     brandHints: ['优先看护具标识、位置调节、耐磨面料、接缝加强和售后尺码。', '网眼通勤服、街道运动服、摩旅服和皮衣是不同使用方向，不要拿一件衣服四季全覆盖。'],
     priceWarning: '价格异常低且无法说明护具、耐磨层和高磨损区结构的产品，不能只凭硬壳外观判断。',
-    searchKeywords: a.usage === 'track' ? ['摩托车赛道皮衣 护背 连体', '摩托车分体皮衣 上下连接'] : a.usage === 'touring' ? ['摩旅骑行服 防水 分层 护具', 'ADV骑行服 夏季 网眼'] : ['摩托车骑行服 护具 耐磨', '夏季网眼骑行服 肩肘背']
+    searchKeywords
   };
 }
 
@@ -723,7 +1072,7 @@ function bootsMarket(a) {
     budgetAdvice: '骑行靴预算要先买到脚踝、后跟、鞋头和鞋底抗扭结构；日常走路需求越高，越要试穿。',
     brandHints: ['重点对比脚型、鞋楦、鞋头厚度、脚踝支撑和换挡区域，不要只看高筒外观。', '电商评论重点筛“宽脚/瘦脚、脚背高低、是否磨踝、换挡杆是否干涉”。'],
     priceWarning: '普通高帮鞋即使外观像骑行靴，也不等于具备抗扭、后跟和脚踝保护。',
-    searchKeywords: a.usage === 'track' ? ['摩托车赛道高筒靴 铰链 抗扭', '赛道骑行靴 胫骨 滑块'] : a.usage === 'touring' ? ['摩旅骑行靴 防水 中高筒', 'ADV骑行靴 抗扭'] : ['城市骑行鞋 脚踝保护', '街道运动骑行靴 换挡']
+    searchKeywords: a.usage === 'track' ? ['摩托车赛道高筒靴 铰链 抗扭', '赛道骑行靴 胫骨 滑块'] : a.usage === 'offroad' ? ['摩托车越野靴 抗扭 护胫', '林道越野靴 护膝 搭配'] : a.usage === 'touring' ? ['摩旅骑行靴 防水 中高筒', 'ADV骑行靴 抗扭'] : ['城市骑行鞋 脚踝保护', '街道运动骑行靴 换挡']
   };
 }
 

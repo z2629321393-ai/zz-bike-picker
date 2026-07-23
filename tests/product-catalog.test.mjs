@@ -1,15 +1,65 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { PRODUCT_CATALOG, popularProductsForCategory, productCatalogStats, recommendProductLadder } from '../src/product-catalog.js';
+import {
+  PRODUCT_CATALOG,
+  catalogFacetsForCategory,
+  catalogProductsForCategory,
+  popularProductsForCategory,
+  productCatalogStats,
+  recommendProductLadder
+} from '../src/product-catalog.js';
 import { accessoryResultCopy, ACCESSORY_CATEGORIES, evaluateAccessory, REMINDER_CONFIG } from '../src/accessories.js';
 
-const expectedCounts = { helmet:25, gloves:20, armor:21, boots:19, luggage:13, lights:13, intercom:47, theft:10 };
+const minimumCounts = { helmet:130, gloves:70, armor:110, boots:70, luggage:40, lights:30, intercom:75, theft:30 };
 
-test('V6.4装备目录保持168条且八类计数准确', () => {
+test('V6.5装备资料库覆盖八类，并把推荐候选与目录资料分层', () => {
   const stats = productCatalogStats();
-  assert.equal(stats.total, 168);
-  assert.deepEqual(stats.byCategory, expectedCounts);
-  assert.equal(stats.withMarketSignal, 22);
+  assert.ok(stats.total >= 580);
+  assert.ok(stats.directoryOnly >= 380);
+  assert.ok(stats.sourceCheckedCandidates >= 6);
+  assert.ok(stats.withMarketSignal >= 22);
+  for (const [category, minimum] of Object.entries(minimumCounts)) {
+    assert.ok((stats.byCategory[category] || 0) >= minimum, category);
+  }
+});
+
+test('完整目录能按头盔和服装类型筛选，资料库条目不进入自动推荐', () => {
+  const advHelmets = catalogProductsForCategory('helmet', { type: 'adv' });
+  const onePiece = catalogProductsForCategory('armor', { type: 'onePieceLeather' });
+  assert.ok(advHelmets.length >= 10);
+  assert.ok(onePiece.length >= 2);
+  assert.ok(advHelmets.every((product) => product.fit.helmetType.includes('adv')));
+  assert.ok(onePiece.every((product) => product.fit.garmentType.includes('onePieceLeather')));
+  assert.ok(PRODUCT_CATALOG.filter((product) => product.catalogScope === 'directory').every((product) => product.recommendable === false));
+});
+
+test('八类目录都能按关键结构筛选，骑行裤不会混入网眼上衣', () => {
+  for (const categoryId of ['helmet', 'gloves', 'armor', 'boots', 'luggage', 'lights', 'intercom', 'theft']) {
+    assert.ok(catalogFacetsForCategory(categoryId).types.length > 0, categoryId);
+  }
+  const meshJackets = catalogProductsForCategory('armor', { type: 'meshJacket' });
+  const pants = catalogProductsForCategory('armor', { type: 'ridingPants' });
+  assert.ok(meshJackets.every((product) => !/裤|pants/i.test(product.model)), '夏季网眼上衣不能混入裤装');
+  assert.ok(pants.length >= 8 && pants.every((product) => product.fit.garmentType.includes('ridingPants')));
+});
+
+test('店铺或类目来源不冒充逐型号在售证据，历史盔型只供资料库浏览', () => {
+  const historicHjc = PRODUCT_CATALOG.find((product) => product.categoryId === 'helmet' && product.model.startsWith('i70'));
+  assert.equal(historicHjc?.recordType, 'archived');
+  assert.equal(historicHjc?.recommendable, false);
+  const sourceChecked = PRODUCT_CATALOG.filter((product) => product.catalogScope === 'source-checked-candidate');
+  assert.ok(sourceChecked.every((product) => product.recommendable
+    && product.recordType === 'exact'
+    && product.cnEvidenceTier === 'cn_exact_public'
+    && product.sourceUrl
+    && /^\d{4}-\d{2}-\d{2}$/.test(product.sourceCheckedAt)));
+});
+
+test('公开榜单和价格页只作出现快照，不能越过中文具体型号资料进入默认推荐', () => {
+  const snapshots = PRODUCT_CATALOG.filter((product) => product.cnEvidenceTier === 'cn_sku_snapshot');
+  assert.ok(snapshots.length >= 20);
+  assert.ok(snapshots.every((product) => product.recommendable === false));
+  assert.ok(snapshots.every((product) => product.selectionEligible === true || product.recordType !== 'exact'));
 });
 
 test('品牌型号规范化后没有重复记录', () => {
@@ -72,10 +122,10 @@ test('六人以内的Q8不会进入大车队候选', () => {
   assert.ok(ladder.items.every((entry) => entry.product.id !== q8.id));
 });
 
-test('没有符合核心筛选条件的替代时允许少于三项', () => {
+test('赛道骑行服不会为了补足数量跨到非赛道结构', () => {
   const ladder = recommendProductLadder('armor', { usage:'track', climate:'mild', wearing:'full', look:'leather', priority:'weak' });
-  assert.equal(ladder.items.length, 1);
-  assert.match(ladder.intro, /不再加入不适用|只有1项/);
+  assert.ok(ladder.items.length >= 1 && ladder.items.length <= 3);
+  assert.ok(ladder.items.every((entry) => entry.product.fit.usage.includes('track')));
 });
 
 test('城市辅助灯即使误选泛光也只给有截止的公路方向', () => {
@@ -141,7 +191,8 @@ test('赛道头盔与入门预算冲突时明确标注而不假装精确匹配',
 
 test('头盔结果保留合规提醒和自然的购买提示', () => {
   const result = evaluateAccessory('helmet', { usage:'city', fit:'unknown', priority:'heat', style:'stealth', budget:'entry' });
-  assert.ok(result.productLadder.items.some((entry) => /赛羽|HJC|LS2/.test(entry.product.brand)));
+  assert.ok(result.productLadder.items.some((entry) => entry.product.brand === 'SHOEI'));
+  assert.ok(result.productLadder.items.every((entry) => entry.product.cnEvidenceTier === 'cn_exact_public'));
   assert.ok(result.productLadder.items.every((entry) => /GB 811-2022/.test(entry.product.complianceNote)));
   assert.doesNotMatch(REMINDER_CONFIG.spokenLine, /不跳链接|不要求购买|这里只是提醒|顺手支持/);
   assert.match(REMINDER_CONFIG.spokenLine, /骑不快的ZZ/);
