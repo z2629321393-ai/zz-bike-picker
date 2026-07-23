@@ -1152,12 +1152,15 @@ function renderAccessoryProductLadder(category, ladder) {
   const items = ladder?.items || [];
   const isTheft = category.id === 'theft';
   const isSelectionReference = ladder?.mode === 'selection-reference';
-  setText('accessoryProductLabel', isTheft ? '组合防护层' : isSelectionReference ? '选型参考' : '优先候选');
+  const isApproximate = ladder?.mode === 'approximate';
+  setText('accessoryProductLabel', isTheft ? '组合防护层' : isSelectionReference ? '选型参考' : isApproximate ? '近似替代' : '优先候选');
   setText('accessoryProductTitle', isTheft
     ? '防盗不是三选一：按停车风险把机械阻碍、报警、定位和管理组合起来。'
     : isSelectionReference
       ? '用途和类型相符，但国内购买仍待核验的型号资料。'
-      : '从最匹配开始，比较符合核心筛选条件的可核验候选。');
+      : isApproximate
+        ? `当前没有完全适合的${ladder?.requestedTypeLabel || '产品'}，先看近似方向。`
+        : '从最匹配开始，比较符合核心筛选条件的可核验候选。');
   els.accessoryProductIntro.textContent = ladder?.intro || '当前没有足够可靠的相近产品数据。';
   if (!items.length) {
     els.accessoryProductLadder.innerHTML = '<article class="product-ladder-empty">暂时没有同时符合这些核心筛选条件的产品，请调整条件或先到线下核对。</article>';
@@ -1176,10 +1179,16 @@ function renderAccessoryProductLadder(category, ladder) {
       reviewUrl ? `<a href="${escapeHtml(reviewUrl)}" target="_blank" rel="noopener noreferrer">公开资料</a>` : ''
     ].filter(Boolean).join('');
     const marketLinks = (entry.marketLinks || []).map((link) => `<a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)}</a>`).join('');
+    const visualBadge = isApproximate
+      ? (entry.rank === 1 ? '没有完全合适的，先看近似方向' : '近似类型示意')
+      : entry.label;
+    const visualAlt = isApproximate
+      ? `当前没有与你选择完全匹配的${ladder?.requestedTypeLabel || '产品'}，这里展示近似方向示意图`
+      : `装备类别示意图（非${product.brand} ${product.model}实物）`;
     return `<article class="product-ladder-card rank-${entry.rank}">
       <div class="product-ladder-visual">
-        <img src="${escapeHtml(entry.image || safeGearImage(category.id, {}))}" alt="装备类别示意图（非${escapeHtml(product.brand)} ${escapeHtml(product.model)}实物）">
-        <span>${escapeHtml(entry.label)}</span>
+        <img src="${escapeHtml(entry.image || safeGearImage(category.id, {}))}" alt="${escapeHtml(visualAlt)}">
+        <span>${escapeHtml(visualBadge)}</span>
       </div>
       <div class="product-ladder-copy">
         <div class="product-ladder-top"><div><small>${escapeHtml(product.sourceType || '公开资料')} · ${escapeHtml(recordTypeLabel(product.recordType))} · 记录可信度${escapeHtml(confidenceLabel[product.confidence] || '待核验')}</small><h4>${escapeHtml(product.brand)}｜${escapeHtml(product.model)}</h4></div><strong>${escapeHtml(product.priceBand || '价格待核验')}</strong></div>

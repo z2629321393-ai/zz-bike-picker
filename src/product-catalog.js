@@ -356,6 +356,131 @@ const HARD_MATCH_KEYS = {
   theft: ['value']
 };
 
+const APPROXIMATE_KEY_BY_CATEGORY = Object.freeze({
+  helmet: 'helmetType',
+  gloves: 'protection',
+  armor: 'garmentType',
+  boots: 'style',
+  luggage: 'system',
+  lights: 'beam',
+  intercom: 'group',
+  theft: 'parking'
+});
+
+const APPROXIMATE_FALLBACKS = Object.freeze({
+  helmet: {
+    openFace: ['threeQuarter'],
+    threeQuarter: ['retroFullFace', 'fullFace'],
+    adv: ['fullFace', 'sportFullFace'],
+    offroad: ['adv', 'fullFace'],
+    modular: ['fullFace'],
+    raceFullFace: ['sportFullFace', 'fullFace'],
+    sportFullFace: ['fullFace'],
+    retroFullFace: ['fullFace', 'threeQuarter'],
+    fullFace: ['sportFullFace', 'modular']
+  },
+  gloves: {
+    race: ['roadSport'],
+    touring: ['roadSport', 'urban'],
+    urban: ['roadSport'],
+    roadSport: ['touring', 'urban']
+  },
+  armor: {
+    onePieceLeather: ['twoPieceLeather'],
+    twoPieceLeather: ['meshJacket', 'textileSuit'],
+    advTouring: ['textileSuit', 'meshJacket'],
+    armoredShirt: ['meshJacket'],
+    ridingPants: ['protectiveJeans'],
+    protectiveJeans: ['ridingPants'],
+    textileSuit: ['meshJacket', 'advTouring'],
+    meshJacket: ['textileSuit', 'armoredShirt']
+  },
+  boots: {
+    offroad: ['adv'],
+    adv: ['sport', 'sneaker'],
+    sport: ['sneaker'],
+    retro: ['sneaker'],
+    sneaker: ['sport']
+  },
+  luggage: {
+    hard3: ['topbox', 'soft'],
+    soft: ['seat', 'topbox'],
+    seat: ['soft', 'topbox'],
+    topbox: ['hard3', 'soft']
+  },
+  lights: {
+    flood: ['combo', 'cutoff'],
+    combo: ['cutoff', 'spot'],
+    spot: ['combo'],
+    cutoff: ['combo']
+  },
+  intercom: {
+    large: ['small'],
+    small: ['pair'],
+    pair: ['solo'],
+    solo: ['pair']
+  },
+  theft: {
+    outdoor: ['uncertain', 'monitored'],
+    uncertain: ['outdoor', 'monitored'],
+    monitored: ['indoor', 'uncertain'],
+    indoor: ['monitored']
+  }
+});
+
+function typeLabel(categoryId, key) {
+  const typeKey = APPROXIMATE_KEY_BY_CATEGORY[categoryId] || typeKeyForCategory(categoryId);
+  return TYPE_LABELS[typeKey]?.[key] || key || '';
+}
+
+function approximateTargets(categoryId, answers = {}) {
+  const key = APPROXIMATE_KEY_BY_CATEGORY[categoryId] || typeKeyForCategory(categoryId);
+  const requested = answers?.[key];
+  const raw = APPROXIMATE_FALLBACKS[categoryId]?.[requested] || [];
+  return { key, requested, alternatives: raw.filter(Boolean) };
+}
+
+function approximateFallbackReason(categoryId, answers = {}) {
+  const { requested, alternatives } = approximateTargets(categoryId, answers);
+  if (!requested || !alternatives.length) return '';
+  const requestedLabel = typeLabel(categoryId, requested);
+  const altLabels = alternatives.map((value) => typeLabel(categoryId, value)).filter(Boolean);
+  if (!altLabels.length) return '';
+  return `当前没有与你选择的“${requestedLabel}”完全匹配的可核验候选，可以先看下方近似方向：${altLabels.join(' / ')}。`;
+}
+
+function isApproximateCompatible(categoryId, product, answers) {
+  const { key, requested, alternatives } = approximateTargets(categoryId, answers);
+  if (!key || !requested || !alternatives.length) return false;
+  if (!includesFit(product, key, alternatives[0]) && !alternatives.some((value) => includesFit(product, key, value))) return false;
+
+  if (categoryId === 'helmet') {
+    return includesFit(product, 'usage', answers.usage) && alternatives.some((value) => includesFit(product, 'helmetType', value));
+  }
+  if (categoryId === 'gloves') {
+    return includesFit(product, 'usage', answers.usage) && alternatives.some((value) => includesFit(product, 'protection', value));
+  }
+  if (categoryId === 'armor') {
+    return includesFit(product, 'usage', answers.usage) && alternatives.some((value) => includesFit(product, 'garmentType', value));
+  }
+  if (categoryId === 'boots') {
+    return includesFit(product, 'usage', answers.usage) && alternatives.some((value) => includesFit(product, 'style', value));
+  }
+  if (categoryId === 'luggage') {
+    return includesFit(product, 'usage', answers.usage) && alternatives.some((value) => includesFit(product, 'system', value));
+  }
+  if (categoryId === 'lights') {
+    return includesFit(product, 'usage', answers.usage) && alternatives.some((value) => includesFit(product, 'beam', value));
+  }
+  if (categoryId === 'intercom') {
+    return alternatives.some((value) => includesFit(product, 'group', value));
+  }
+  if (categoryId === 'theft') {
+    return includesFit(product, 'value', answers.value) && alternatives.some((value) => includesFit(product, 'parking', value));
+  }
+  return false;
+}
+
 const includesFit = (product, key, value) => !value || product.fit?.[key]?.includes(value);
 
 const isCoreCompatible = (categoryId, product, answers) => {
@@ -484,6 +609,15 @@ export function recommendProductLadder(categoryId, answers = {}, result = null) 
     );
     usingSelectionFallback = compatible.length > 0;
   }
+  let usingApproximateFallback = false;
+  if (!compatible.length && ['helmet', 'gloves', 'armor', 'boots', 'luggage', 'intercom'].includes(categoryId)) {
+    compatible = uniqueBy(
+      rankProducts(selectionReferences.length ? selectionReferences : recommendationProducts).filter((entry) => isApproximateCompatible(categoryId, entry.product, answers)),
+      (entry) => entry.product.canonicalFamilyId
+    );
+    usingApproximateFallback = compatible.length > 0;
+  }
+
   // 灯光和赛道皮衣先守住用途、光型/结构；如果没有可核验的具体 SKU，才回退到
   // 明确标为“选型方向”的记录，帮助用户继续找型号，而不是把不相干产品硬凑进结果。
   let usingDirectionFallback = false;
@@ -545,11 +679,14 @@ export function recommendProductLadder(categoryId, answers = {}, result = null) 
     const movedDown = index > 0 && product.tier < previousTier;
     const isDirectionFallback = usingDirectionFallback && product.recordType === 'direction';
     const isSelectionReference = usingSelectionFallback && product.selectionEligible === true;
+    const isApproximateFallback = usingApproximateFallback && !isDirectionFallback && !isSelectionReference;
     const isTheftDirection = categoryId === 'theft' && product.recordType === 'direction';
     const label = isDirectionFallback
       ? (categoryId === 'armor' ? '装备结构方向（需核对具体型号）' : '选型方向（需核对具体型号）')
       : isSelectionReference
         ? (index === 0 ? '选型参考（国内购买待核验）' : `同场景参考 ${index + 1}（国内购买待核验）`)
+      : isApproximateFallback
+        ? (index === 0 ? '没有完全合适的：先看近似方向' : index === 1 ? '近似替代 2' : '近似替代 3')
       : isTheftDirection
         ? '补充防护方向（非具体 SKU）'
       : categoryId === 'theft'
@@ -563,6 +700,10 @@ export function recommendProductLadder(categoryId, answers = {}, result = null) 
       ? `当前资料没有同时满足这些条件的可核验具体型号；这里仅保留用途和${categoryId === 'armor' ? '服装结构' : '光型'}正确的选型方向，不能直接等同于某一 SKU 或购买建议。`
       : isSelectionReference
         ? '它符合当前的用途和类型筛选，但尚未找到带日期的中文公开渠道快照或中文官方具体型号资料。这里只作为继续核对的选型参考，不能当作国内现货或默认购买建议。'
+      : isApproximateFallback
+        ? (index === 0
+            ? `${approximateFallbackReason(categoryId, answers)} 先守住用途和安全边界，再用近似类型继续缩小范围。`
+            : '这是在核心使用场景不变的前提下，向相近结构或功能退一步后的近似选择。')
       : isTheftDirection
         ? '这是互补防护层的选型方向：优先找有持续服务、低电提醒和位移/断电通知的具体定位器；不能单独替代机械阻碍和停车管理。'
       : index === 0
@@ -587,12 +728,16 @@ export function recommendProductLadder(categoryId, answers = {}, result = null) 
   });
 
   return {
-    exactEnough: usingDirectionFallback || usingSelectionFallback ? false : exactEnough,
-    mode: usingSelectionFallback ? 'selection-reference' : usingDirectionFallback ? 'direction' : 'recommendation',
+    exactEnough: usingDirectionFallback || usingSelectionFallback || usingApproximateFallback ? false : exactEnough,
+    mode: usingSelectionFallback ? 'selection-reference' : usingDirectionFallback ? 'direction' : usingApproximateFallback ? 'approximate' : 'recommendation',
+    approximateReason: usingApproximateFallback ? approximateFallbackReason(categoryId, answers) : '',
+    requestedTypeLabel: usingApproximateFallback ? typeLabel(categoryId, approximateTargets(categoryId, answers).requested) : '',
     intro: usingSelectionFallback
       ? '当前没有同时符合这些条件的中文公开渠道可核验候选。以下是用途和类型匹配的具体型号资料，国内该版本的库存、价格、认证和售后仍待核验；页面不会把它们写成国内现货。'
       : usingDirectionFallback
       ? `当前没有同时满足这些条件的可核验具体型号。以下只给出用途和${categoryId === 'armor' ? '服装结构' : '光型'}正确的选型方向；请打开来源或搜索词，逐一核对具体型号、${categoryId === 'armor' ? '护具位置、版型和耐磨层' : '线束、截止线和道路使用要求'}。`
+      : usingApproximateFallback
+      ? `${approximateFallbackReason(categoryId, answers)} 下面这些不是“完全符合”，而是在核心使用场景不变前提下最接近的近似方案。`
       : categoryId === 'theft'
       ? '防盗手段不是互相替代的三选一。下面按当前风险列出需要组合的防护层，并优先建议更安全的停车环境。'
       : chosen.length < 3

@@ -1,6 +1,6 @@
 {
-  "name": "zz-bike-picker-v6-5-equipment-directory",
-  "version": "6.5.1",
+  "name": "zz-bike-picker-v6-5-2-approx-fallback",
+  "version": "6.5.2",
   "private": true,
   "type": "module",
   "scripts": {
