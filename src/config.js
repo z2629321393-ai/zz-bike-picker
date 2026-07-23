@@ -1,4 +1,4 @@
-export const APP_VERSION = '6.5.1';
+export const APP_VERSION = '6.5.2';
 export const DATA_VERSION = '2026-07-23';
 export const STORAGE_KEY = 'zz-bike-picker-v6.5';
 

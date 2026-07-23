@@ -43,7 +43,7 @@ export async function renderResultPoster(canvas, result, logoUrl) {
   ctx.fillText('骑不快的ZZ', 215, 130);
   ctx.font = '700 22px system-ui, sans-serif';
   ctx.fillStyle = '#667085';
-  ctx.fillText('选车与装备建议 · V6.5.1', 215, 169);
+  ctx.fillText('选车与装备建议 · V6.5.2', 215, 169);
 
   pill(ctx, 645, 95, 150, 52, '#101b2c', '#ffffff', '选车结论');
 
