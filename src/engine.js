@@ -299,19 +299,19 @@ export function analyzeConflicts(answers, primary) {
     list.push('预算偏紧，但动力需求偏高。车价能压下来，轮胎、刹车、车况和后期成本压不下来。');
   }
   if (answers.maintenance === 'low' && ['sport', 'offroad', 'collector'].includes(primary)) {
-    list.push('你不想花精力维护，但结果偏性能或硬核。要么降低车型强度，要么提高维护意愿。');
+    list.push('你的维护意愿较低，但结果偏性能、非铺装或收藏方向。可以降低车型复杂度，或重新评估可投入的维护时间。');
   }
   if (answers.ownership === 'low' && ['sport', 'cruiser', 'adv', 'collector'].includes(primary)) {
     list.push('你要求低持有成本，但目标车型通常更重、更费耗材或折旧更明显。');
   }
   if (answers.height <= 165 && ['adv', 'offroad'].includes(primary)) {
-    list.push('身高与高座车型存在硬冲突。必须实车确认单脚支撑、掉头和倒车挪车。');
+    list.push('身高初筛提示高座车型可能增加落脚和低速负担。请结合腿长、坐垫宽度、车重与重心，实车体验撑地、掉头和挪车。');
   }
   if (answers.height >= 188 && ['scooter', 'retro'].includes(primary)) {
-    list.push('你身高较高，小踏板和迷你复古可能实用，但视觉比例容易显小。');
+    list.push('你身高较高，小尺寸车型仍可能实用，但要重点核对膝部空间、车把距离和长时间骑姿。');
   }
   if (answers.usage === 'commute' && answers.power === 'extreme') {
-    list.push('核心用途是通勤，却选择极端动力。日常热量、油耗、轮胎和低速体验可能反过来消耗你。');
+    list.push('核心用途是通勤，但动力需求很高。日常热量、油耗、轮胎成本和低速体验可能与通勤目标冲突。');
   }
   if (answers.load === 'both' && primary === 'sport') {
     list.push('经常带人带行李与仿赛姿态冲突。后座、装载和重心会明显妥协。');
@@ -323,7 +323,7 @@ export function analyzeConflicts(answers, primary) {
     list.push('你想买高存在感或收藏向车型，但停车环境偏开放。盗抢、风吹日晒和剐蹭风险会放大。');
   }
   if (answers.experience === 'new' && answers.power === 'extreme') {
-    list.push('完全新手却选择极端动力。不是绝对不能买，而是容错率与学习成本严重不匹配。');
+    list.push('完全新手选择极高动力时，车辆容错率与当前学习阶段明显不匹配，建议先从更线性的动力开始。');
   }
   return list;
 }

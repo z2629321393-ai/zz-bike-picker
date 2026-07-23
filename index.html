@@ -102,7 +102,7 @@
             </div>
           </div>
           <div class="clarity-ring" id="clarityRing">
-            <div><strong id="clarityValue">78</strong><span>答案完整度</span></div>
+            <div><strong id="clarityValue">78</strong><span>方向清晰度</span></div>
           </div>
         </div>
         <div class="trait-strip" id="traitStrip"></div>
@@ -139,7 +139,7 @@
         </section>
 
         <section class="result-section">
-          <div class="section-heading"><div><span>02</span><h3>不同车型方向的匹配度</h3></div><p>分数接近时，说明几个方向都可考虑，最终还要靠试坐确认。</p></div>
+          <div class="section-heading"><div><span>02</span><h3>不同车型方向的相对倾向</h3></div><p>条形只用于本站规则内比较，不是概率或安全评分；最终还要靠试坐确认。</p></div>
           <div class="score-bars" id="scoreBars"></div>
         </section>
 
@@ -220,8 +220,8 @@
         <section class="gear-profile-panel">
           <div class="gear-profile-copy">
             <span class="decision-label">需求与取舍</span>
-            <h3>结果会说明推荐方向、使用感和需要接受的代价。</h3>
-            <p>分数只表示当前答案下的相对倾向，用来比较保护、舒适、操控和外观，不是实验室检测结论。</p>
+            <h3>结果会说明推荐方向、使用感和主要取舍。</h3>
+            <p>下方“高/中/低”只表示当前答案下的规则权重，用来比较不同取向，不代表认证等级、碰撞测试或实验室分数。</p>
           </div>
           <div class="gear-metrics" id="accessoryMetrics"></div>
         </section>
@@ -232,10 +232,10 @@
           </div>
           <div class="market-info">
             <span class="decision-label">先按方向筛选，再到平台核对</span>
-            <h3>图片只帮助理解方向；购买前请核对结构、尺码、版本和真实评价。</h3>
+            <h3>图片只帮助理解方向；购买前请核对结构、尺码、版本和多来源公开评价。</h3>
             <div class="market-info-grid">
               <article><b>预算建议</b><p id="accessoryBudgetAdvice"></p></article>
-              <article><b>价格底线提醒</b><p id="accessoryPriceWarning"></p></article>
+              <article><b>低价风险提醒</b><p id="accessoryPriceWarning"></p></article>
             </div>
             <div class="brand-hints"><b>品牌 / 产品方向</b><div id="accessoryBrandHints"></div></div>
             <div class="search-keywords-wrap"><b>复制搜索词后到平台比价</b><div id="accessorySearchKeywords"></div></div>
@@ -245,19 +245,19 @@
         </section>
         <section class="product-ladder-panel">
           <div class="product-ladder-head">
-            <div><span class="decision-label">分档候选方案</span><h3>从最匹配开始，在守住核心场景的前提下比较替代项。</h3></div>
-            <p id="accessoryProductIntro">系统会按你的答案、产品适配和资料可信度给出候选；没有安全替代时不会为了凑数硬推三款。</p>
+            <div><span class="decision-label" id="accessoryProductLabel">优先候选</span><h3 id="accessoryProductTitle">从最匹配开始，比较符合核心筛选条件的可选项。</h3></div>
+            <p id="accessoryProductIntro">系统会按你的答案、产品适配和资料核验程度给出候选；没有符合核心条件的替代项时，不会补足数量。</p>
           </div>
           <div class="product-ladder-grid" id="accessoryProductLadder"></div>
           <p class="product-ladder-disclaimer">价格、库存和版本会变化。页面展示的是候选方向与公开资料，不把单个平台榜单当作全市场销量。</p>
         </section>
         <section class="hotlist-panel">
-          <div class="hotlist-head"><div><span class="decision-label">同类目录参考</span><h3>10 个当前常见候选</h3></div><p>带日期和来源的才是公开平台快照；没有快照的会明确标为“目录候选”，不是销量排名。</p></div>
+          <div class="hotlist-head"><div><span class="decision-label">同类目录参考</span><h3>目录中的 10 项候选（非排名）</h3></div><p>带日期和来源的公开平台快照会优先展示；其余只是目录参考，卡片顺序不代表销量名次。</p></div>
           <div class="hotlist-grid" id="accessoryHotlist"></div>
         </section>
         <section class="accessory-sensation-grid">
           <article><span class="decision-label">实际使用感受</span><h3>日常使用会有哪些感受</h3><p id="accessoryFeelNote"></p></article>
-          <article><span class="decision-label">外观与整车搭配</span><h3>兼顾风格，也别牺牲实用性</h3><p id="accessoryStyleNote"></p></article>
+          <article><span class="decision-label">外观与整车搭配</span><h3>兼顾风格，同时保留实用性</h3><p id="accessoryStyleNote"></p></article>
         </section>
         <section class="accessory-result-grid four">
           <article class="accessory-advice trade"><span>需要接受的取舍</span><div id="accessoryTradeoffs"></div></article>

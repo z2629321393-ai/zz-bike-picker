@@ -324,8 +324,8 @@ button:focus-visible,input:focus-visible{outline:3px solid rgba(255,150,84,.55);
 .product-ladder-empty{padding:18px;border-radius:16px;background:#f6f8fb;color:#667085}
 .hotlist-head p{margin:0;padding:14px 16px;border-radius:16px;background:#f5f8fc;color:#5f6f83;line-height:1.7;font-size:14px;border:1px solid var(--line)}
 .hotlist-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.hotlist-card{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:12px;align-items:start;padding:14px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(135deg,#fff 0%,#f7fbff 100%)}
-.hotlist-rank{width:40px;height:40px;border-radius:14px;background:var(--navy);color:#fff;display:grid;place-items:center;font-weight:900}
+.hotlist-card{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:12px;align-items:start;padding:14px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(135deg,#fff 0%,#f7fbff 100%)}
+.hotlist-marker{width:10px;height:10px;margin-top:6px;border-radius:50%;background:#cbd5df}.hotlist-marker.is-snapshot{background:var(--orange);box-shadow:0 0 0 4px rgba(255,150,84,.14)}
 .hotlist-main small{color:#718096;font-size:11px;line-height:1.5}
 .hotlist-main h4{margin:4px 0 5px;color:var(--navy);font-size:16px;line-height:1.35}
 .hotlist-main p{margin:0;color:#607086;font-size:12px;line-height:1.55}
@@ -333,6 +333,8 @@ button:focus-visible,input:focus-visible{outline:3px solid rgba(255,150,84,.55);
 .hotlist-actions{grid-column:2/4;display:flex;flex-wrap:wrap;gap:7px}
 .hotlist-actions a,.hotlist-actions button{border:0;border-radius:999px;padding:7px 10px;background:#edf4fb;color:var(--navy);font-size:11px;font-weight:800;text-decoration:none;cursor:pointer}
 .hotlist-empty{padding:18px;border-radius:16px;background:#f6f8fb;color:#667085}
+.score-row{grid-template-columns:110px 1fr 48px}
+.modal-body .modal-score-note{margin:8px 0 18px;font-size:12px;color:var(--muted)}
 
 @media(max-width:760px){
   .product-ladder-head,.hotlist-head{grid-template-columns:1fr}
@@ -341,6 +343,8 @@ button:focus-visible,input:focus-visible{outline:3px solid rgba(255,150,84,.55);
   .product-ladder-top{flex-direction:column}
   .product-ladder-top strong{white-space:normal}
   .hotlist-grid{grid-template-columns:1fr}
-  .hotlist-card{grid-template-columns:42px minmax(0,1fr)}
+  .hotlist-card{grid-template-columns:18px minmax(0,1fr)}
   .hotlist-price,.hotlist-actions{grid-column:2}
 }
+
+@media(max-width:680px){.score-row{grid-template-columns:84px 1fr 44px}}

@@ -2554,7 +2554,7 @@ export const EXPANDED_PRODUCT_CATALOG = Object.freeze([
     },
     "idealFor": "冬季通勤和低温长途，预算有限的人。",
     "reviewSummary": "京东冬季摩托车手套榜公开快照位居前列。",
-    "compromise": "厚度带来明显“握屎感”，操作细腻度和触屏会下降。",
+    "compromise": "厚度会削弱操作细腻度，触屏体验也会下降。",
     "popularityScore": 80,
     "marketSignal": null,
     "aliases": []

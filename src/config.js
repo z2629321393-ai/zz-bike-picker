@@ -7,7 +7,7 @@ export const TYPE_LABELS = {
     name: '省心通勤型',
     short: '踏板/通勤',
     tone: '把生活复杂度降下来',
-    desc: '你要的是每天都愿意骑，而不是每次出门都要做心理建设。省心、好停、好挪、装载够用，比极限性能更重要。'
+    desc: '你希望每天都愿意骑，也不希望每次出行都额外担心操作和维护负担。省心、好停、好挪、装载够用，比极限性能更重要。'
   },
   adv: {
     name: '远方务实型',
@@ -22,7 +22,7 @@ export const TYPE_LABELS = {
     desc: '你买车很看重体量、声浪和镜头表现。巡航能给你情绪价值，但低速操控、车重、轮胎和改装成本不会消失。'
   },
   sport: {
-    name: '刺激仿赛型',
+    name: '运动仿赛型',
     short: '仿赛/跑车',
     tone: '反馈越直接，代价越明显',
     desc: '你对操控、动力和运动外形更敏感。仿赛能给你强反馈，但手腕、腰、热量、摔车件和轮胎成本要一起算。'
@@ -30,8 +30,8 @@ export const TYPE_LABELS = {
   street: {
     name: '均衡街车型',
     short: '街车',
-    tone: '不极端，通常最少后悔',
-    desc: '你需要一台能通勤、能周末玩、成本也不至于失控的车。街车不是最炸，但往往是最不容易买错的大类。'
+    tone: '取向均衡，日常兼顾性较强',
+    desc: '你需要一台能通勤、能周末骑行，成本也相对可控的车。街车未必最抢眼，但通常更容易兼顾日常与乐趣。'
   },
   retro: {
     name: '复古情绪型',
@@ -40,7 +40,7 @@ export const TYPE_LABELS = {
     desc: '你在意调性、质感和日常氛围。复古车不一定最快，但更适合慢慢骑、拍内容、城市短途和轻摩旅。'
   },
   offroad: {
-    name: '硬核越野型',
+    name: '非铺装探索型',
     short: '越野/拉力',
     tone: '技术门槛比参数更真实',
     desc: '你不是只想看风景，而是想进入烂路和非铺装。越野和拉力很有乐趣，但座高、摔车、维护和技术门槛都更现实。'
@@ -112,7 +112,7 @@ export const LABELS = {
     low: '低持有成本',
     mid: '成本适中',
     high: '愿为体验付费',
-    notcare: '开心优先'
+    notcare: '体验优先'
   },
   mod: {
     none: '完全原厂',
@@ -145,15 +145,15 @@ export const QUESTIONS = [
     id: 'usage',
     section: '核心用途',
     eyebrow: '先定任务',
-    title: '这台车买回来，最主要替你干什么？',
-    help: '只能先选一个最核心的。用途不清楚，配置越高越容易买错。',
+    title: '这台车买回来，最常用来做什么？',
+    help: '先选最常见的真实用途，结果会据此确定车型方向。',
     type: 'single',
     options: [
       { value: 'commute', icon: '城', label: '通勤代步', detail: '每天骑，省心、好停、好挪最重要' },
-      { value: 'fun', icon: '玩', label: '周末玩乐', detail: '平时不开，周末出去找情绪价值' },
+      { value: 'fun', icon: '玩', label: '周末玩乐', detail: '平日使用较少，周末更看重骑行体验' },
       { value: 'travel', icon: '旅', label: '摩旅长途', detail: '续航、坐姿、装载和烂路能力' },
       { value: 'status', icon: '镜', label: '外观/镜头表现', detail: '重视体量、质感、声浪和画面效果' },
-      { value: 'track', icon: '弯', label: '跑山/赛道', detail: '操控、刹车、轮胎和动力反馈' },
+      { value: 'track', icon: '弯', label: '街道运动 / 封闭场地', detail: '公共道路遵守交规；性能体验应在合法封闭场地进行' },
       { value: 'collect', icon: '藏', label: '收藏情怀', detail: '不一定常骑，故事和稀缺性更重要' }
     ]
   },
@@ -169,7 +169,7 @@ export const QUESTIONS = [
       { value: 15000, icon: '¥', label: '8000—1.5万', detail: '基础通勤、入门小排' },
       { value: 25000, icon: '¥', label: '1.5—2.5万', detail: '主流入门玩乐区间' },
       { value: 40000, icon: '¥', label: '2.5—4万', detail: '国产中排主战场' },
-      { value: 65000, icon: '¥', label: '4—6.5万', detail: '中高阶玩具、部分进口' },
+      { value: 65000, icon: '¥', label: '4—6.5万', detail: '中高阶车型、部分进口车型' },
       { value: 100000, icon: '¥', label: '6.5万以上', detail: '大排、进口、强情绪价值' }
     ]
   },
@@ -200,7 +200,7 @@ export const QUESTIONS = [
     section: '性格底色',
     eyebrow: '买车动机',
     title: '下面哪句话，最像你买车时的真实想法？',
-    help: '不要选“正确答案”，选你真正会掏钱的那一个。',
+    help: '不用猜“正确答案”，选择你实际愿意为之付费的一项。',
     type: 'single',
     options: [
       { value: 'practical', icon: '稳', label: '可靠省心更重要', detail: '可靠、售后、保值比参数更重要' },
@@ -214,7 +214,7 @@ export const QUESTIONS = [
   {
     id: 'cost',
     section: '养车意愿',
-    eyebrow: '买得起≠养得起',
+    eyebrow: '长期持有成本',
     title: '车买回来以后，你愿意为它付出到什么程度？',
     help: '保养意愿和持有成本分开看。有人愿意勤保养，但不愿意承担高油耗和高折旧。',
     type: 'cost'
@@ -246,7 +246,7 @@ export const QUESTIONS = [
     section: '使用环境',
     eyebrow: '现实路况',
     title: '你平常在哪骑，又要带多少东西？',
-    help: '很多车单人空载很好骑，一旦带人、装箱、走烂路，性格会完全变。',
+    help: '载人、装箱或进入较差路况后，操控、制动和重心表现会明显变化。',
     type: 'roadload'
   },
   {
@@ -254,7 +254,7 @@ export const QUESTIONS = [
     section: '距离与停车',
     eyebrow: '日常代价',
     title: '你每天要骑多远，车平常停在哪里？',
-    help: '通勤距离决定舒适和风阻，停车环境决定你该不该买太贵、太重、太显眼的车。',
+    help: '通勤距离会影响舒适和风阻需求；停车环境会影响防盗投入、挪车负担和车辆价值风险。',
     type: 'commuteParking'
   },
   {

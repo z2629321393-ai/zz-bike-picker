@@ -6,7 +6,7 @@ export const REMINDER_CONFIG = {
   promoImage: 'assets/extension-promo.png',
   promoTitle: '开始前，先确认一件事',
   promoText: '这次只回答你所选项目的问题，完成后就能查看建议；其他装备可以以后再测。',
-  spokenLine: '如果想看看我整理的头套、蓝牙耳机或其他骑行装备，也可以到抖音“骑不快的ZZ”的橱窗作参考。先按自己的使用场景选，合适再买。'
+  spokenLine: '如果想看看我整理的头套、蓝牙耳机或其他骑行装备，也可以到抖音“骑不快的ZZ”的橱窗作参考。这是作者自有橱窗推广，不参与推荐排序；先按自己的使用场景选，合适再买。'
 };
 
 const q = (id, title, help, options) => ({ id, title, help, options });
@@ -22,7 +22,7 @@ export const ACCESSORY_CATEGORIES = [
         ['sport', '跑山/运动骑行', '高速稳定、贴合和上方视野更重要'],
         ['track', '赛道使用', '低伏视野、气动、固定与双D扣取向更强']
       ]),
-      q('fit', '你的头型和试戴情况？', '头围只是尺码起点，头型不合会让好头盔也变成刑具。', [
+      q('fit', '你的头型和试戴情况？', '头围只是尺码起点；头型不合，即使是高价头盔也可能持续压痛。', [
         ['unknown', '完全不知道', '必须先线下连续试戴15—20分钟'],
         ['round', '偏圆头', '两侧较宽，容易压太阳穴'],
         ['neutral', '中性头型', '主流盔型选择面较广'],
@@ -52,7 +52,7 @@ export const ACCESSORY_CATEGORIES = [
     id: 'gloves', icon: '套', title: '帮我选手套', accent: '手感与保护',
     subtitle: '按通勤、跑山、旅行或赛道选择，保护和手感一起看。',
     questions: [
-      q('usage', '你主要在哪种强度下骑？', '跑山和赛道不是一个级别，别为了“看起来专业”买过头。', [
+      q('usage', '你主要在哪种强度下骑？', '街道运动和封闭赛道的风险与装备结构不同，请按真实使用强度选择。', [
         ['city', '城市通勤', '频繁穿脱、低速操作、手机和舒适优先'],
         ['touring', '长途摩旅', '长时间舒适、防风防雨和疲劳控制'],
         ['mountain', '跑山/街道运动', '要保护，也要保留刹车和油门细腻感'],
@@ -64,7 +64,7 @@ export const ACCESSORY_CATEGORIES = [
         ['touring', '旅行防护型', '全天舒适、防风防水，但膜层会损失一点手感'],
         ['race', '赛道长护腕型', '保护最强，刚戴时更硬、更紧，低速手感未必舒服']
       ]),
-      q('feel', '你对“握把手感”有多敏感？', '有些厚重手套会让你觉得像隔着东西抓油门，俗称“握屎感”。', [
+      q('feel', '你对握把反馈有多敏感？', '厚重手套会削弱油门、刹车和按键反馈，需要在保护与操作感之间取舍。', [
         ['thin', '极度在意细腻手感', '希望刹车点、油门和离合都很清晰'],
         ['balanced', '可以接受适度厚度', '保护和手感取中间'],
         ['breakin', '能接受磨合', '前几次硬一点，之后慢慢贴手'],
@@ -80,7 +80,7 @@ export const ACCESSORY_CATEGORIES = [
         ['stealth', '低调黑色', '通勤、ADV、街车都容易搭'],
         ['race', '赛车感', '长护腕、亮色、护壳明显'],
         ['retro', '复古皮质', '巡航/复古车更协调'],
-        ['match', '跟车和骑行服配色', '整体好看，但别为了配色买错尺码']
+        ['match', '跟车和骑行服配色', '整体协调，但尺码和结构仍应优先']
       ])
     ]
   },
@@ -140,7 +140,7 @@ export const ACCESSORY_CATEGORIES = [
         ['sensitive', '非常在意', '鞋头薄一些、前掌更灵活'],
         ['balanced', '均衡即可', '适度支撑和操作感'],
         ['protect', '保护优先', '接受脚感变钝'],
-        ['newbie', '不确定', '优先易适应、别一上来太硬']
+        ['newbie', '不确定', '优先选择容易适应的结构与脚感']
       ]),
       q('weather', '防水需求？', '防水膜通常会牺牲通风。', [
         ['no', '不需要', '更轻、更透气'],
@@ -158,7 +158,7 @@ export const ACCESSORY_CATEGORIES = [
   },
   {
     id: 'luggage', icon: '箱', title: '帮我选尾箱/箱包', accent: '重心与美观',
-    subtitle: '从用途、容量、支架承载和重心入手，别只看能装多少。',
+    subtitle: '从用途、容量、支架承载和重心入手，不只比较标称容积。',
     questions: [
       q('usage', '装载目的？', '通勤放头盔和长途露营不是同一套方案。', [
         ['commute', '通勤收纳', '头盔、雨衣、电脑'],
@@ -197,13 +197,13 @@ export const ACCESSORY_CATEGORIES = [
     subtitle: '先判断铺路、远射还是雨雾，再核对光型、电路和当地要求。',
     questions: [
       q('usage', '你安装辅助灯的主要目的是什么？', '用途不同，需要的光型和安装方式也不同。', [
-        ['city', '城市提高存在感', '低亮度、规范光型'],
+        ['city', '城市提高存在感', '低亮度、受控光型，并核对当地要求'],
         ['touring', '夜间长途', '近场铺路+远场补充'],
         ['fog', '雨雾天气', '低位宽光、减少反射'],
         ['offroad', '非铺装', '宽近场和远场组合，公路可关闭']
       ]),
       q('beam', '你更需要哪种光？', '一对灯不可能同时把所有区域照好。', [
-        ['cutoff', '有截止的近场铺路', '不晃人、日常最实用'],
+        ['cutoff', '有截止的近场铺路', '更容易控制眩光，但不代表自动符合上路要求'],
         ['spot', '远射', '看远处，但近场可能不够'],
         ['flood', '宽泛光', '烂路好用，公路更容易眩光'],
         ['combo', '分区组合', '效果完整，但安装和控制更复杂']
@@ -332,6 +332,12 @@ export function evaluateAccessory(categoryId, answers = {}, vehicleResult = null
 }
 
 export function accessoryResultCopy(category, result) {
+  const ladderItems = result.productLadder?.items || [];
+  const ladderHeading = category.id === 'theft'
+    ? `组合防护层（${ladderItems.length}层，按停车风险叠加）：`
+    : `符合核心筛选条件的候选（${ladderItems.length}项）：`;
+  const recordTypeText = { exact: '具体型号', series: '系列', direction: '选购方向', bundle: '组合方案' };
+  const confidenceText = { high: '较高', medium: '中等', low: '较低' };
   return [
     `【骑不快的ZZ｜${category.title}】`,
     `推荐方向：${result.headline}`,
@@ -346,12 +352,15 @@ export function accessoryResultCopy(category, result) {
     '品牌/产品方向：', ...result.brandHints.map((item) => `- ${item}`),
     `价格提醒：${result.priceWarning}`,
     '平台搜索词：', ...result.searchKeywords.map((item) => `- ${item}`),
-    '', '三档候选：',
-    ...(result.productLadder?.items || []).flatMap((entry) => [
+    '', ladderHeading,
+    ...ladderItems.flatMap((entry) => [
       `${entry.rank}. ${entry.label}：${entry.product.brand} ${entry.product.model}（${entry.product.priceBand}）`,
+      `   记录类型：${recordTypeText[entry.product.recordType] || '目录候选'}；资料可信度：${confidenceText[entry.product.confidence] || '待核验'}`,
+      `   国内状态：${entry.product.cnAvailability || '当前销售渠道待核验'}`,
+      entry.product.complianceNote ? `   合规提醒：${entry.product.complianceNote}` : '',
       `   ${entry.whyRelaxed}`,
       `   取舍：${entry.product.compromise}`
-    ]),
+    ].filter(Boolean)),
     '', `购买渠道提醒：${result.spokenLine}`
   ].join('\n');
 }
@@ -367,8 +376,8 @@ function baseResult(headline, summary, metrics) {
 
 function evaluateHelmet(a) {
   const r = baseResult('中性街道全盔，先把合头和长期舒适做对', '你更适合从合规、合头的全盔开始。头盔最重要的是碰撞时稳定留在正确位置，而不是材料名称或价格排名。', metricSet({ 安全固定: 88, 长途舒适: 74, 风噪控制: 68, 通风: 72, 外观协调: 76 }));
-  r.priorities.push('测头围后连续试戴15—20分钟，确认额头、太阳穴和后脑没有尖锐压痛', '摇头时头盔不能明显滞后，脸颊应均匀包裹', '核对当前有效的合规/认证信息、扣具、镜片和替换耗材');
-  r.avoid.push('只按品牌、碳纤维纹路或“K数”下单', '为了不夹直接买大一号', '只在店里戴30秒就判断舒适');
+  r.priorities.push('测头围后连续试戴15—20分钟，确认额头、太阳穴和后脑没有尖锐压痛', '摇头时头盔不能明显滞后，脸颊应均匀包裹', '在中国大陆购买或道路使用前，核验具体型号的 GB 811-2022 标识、生产者、生产日期与正规销售渠道；境外认证不自动等于国内合规');
+  r.avoid.push('只按品牌、碳纤维纹路或材料营销词下单', '为了不夹直接买大一号', '只在店里戴30秒就判断舒适');
   r.checklist.push('骑姿下视野完整，尤其是低伏时上方视野', '镜片密封、防雾片和通风口可戴手套操作', '耳槽和眼镜通道不压耳');
   if (a.usage === 'touring') {
     r.headline = '轻量摩旅全盔：风噪、重心和一小时后的舒适更重要';
@@ -376,7 +385,7 @@ function evaluateHelmet(a) {
     r.metrics = metricSet({ 安全固定: 88, 长途舒适: 91, 风噪控制: 86, 通风: 74, 外观协调: 74 });
     r.tradeoffs.push('更安静通常会牺牲部分通风；大风道通常会增加风噪');
   } else if (a.usage === 'sport') {
-    r.headline = '街道运动全盔：高速稳定和贴合优先，但别把赛道盔当通勤盔';
+    r.headline = '街道运动全盔：高速稳定和贴合优先，同时兼顾日常使用';
     r.metrics = metricSet({ 安全固定: 93, 长途舒适: 68, 风噪控制: 70, 通风: 84, 外观协调: 88 });
     r.tradeoffs.push('运动盔包裹更紧、风道更多，日常穿脱和安静程度未必最好');
   } else if (a.usage === 'track') {
@@ -430,7 +439,7 @@ function evaluateGloves(a) {
     r.tradeoffs.push('防水、保暖越强，握持细腻感和通风通常越差');
     r.priorities.push('袖口和骑行服要形成顺水搭接，防止雨水灌入');
   } else if (urban) {
-    r.headline = '轻量城市手套：最舒服、手感最好，但保护边界要说清楚';
+    r.headline = '轻量城市手套：日常舒适和操作感优先，同时明确保护边界';
     r.metrics = metricSet({ 防护: 58, 舒适: 94, 握持感: 94, 通风: 88, 美观: 80 });
     r.feelNote = '薄掌心、柔软织物或软皮会让油门和刹车反馈更直接；代价是护腕短，固定和耐磨上限较低。';
     r.tradeoffs.push('舒服、灵活、适合通勤，但不适合承担高速跑山或赛道风险');
@@ -471,12 +480,12 @@ function evaluateArmor(a) {
   if (a.climate === 'hot') r.priorities.push('大面积网眼和浅色更现实，必要时把防雨层独立携带');
   if (a.priority === 'ugly') r.styleNote = '优先修身版型、隐藏式护具和低调配色；但护具不能为了显瘦被挤出关节位置。';
   else r.styleNote = styleArmor(a.look);
-  if (a.wearing === 'fast') r.avoid.push('需要十几分钟穿戴、最终只能挂墙的完整套装');
+  if (a.wearing === 'fast') r.avoid.push('穿戴流程过于复杂、导致日常使用频率很低的完整套装');
   return finalize(r);
 }
 
 function evaluateBoots(a) {
-  const r = baseResult('中筒街道骑行靴：脚踝支撑、换挡感和步行做平衡', '骑行靴的价值是在压车、倒车和滑行时限制脚踝过度扭转，并保护脚背、后跟和胫骨。', metricSet({ 脚踝保护: 80, 步行舒适: 76, 换挡脚感: 78, 防水: 55, 美观: 82 }));
+  const r = baseResult('中筒街道骑行靴：脚踝支撑、换挡感和步行做平衡', '骑行靴的价值是在车辆倒地或发生滑行时限制脚踝过度扭转，并保护脚背、后跟和胫骨。', metricSet({ 脚踝保护: 80, 步行舒适: 76, 换挡脚感: 78, 防水: 55, 美观: 82 }));
   r.priorities.push('脚踝两侧、后跟和鞋头有结构支撑，鞋底不易横向扭曲', '坐上车后能自然勾到换挡杆和踩后刹', '穿骑行袜试尺码，脚跟不抬、脚趾有合理余量');
   r.avoid.push('把普通高帮鞋当骑行靴', '为了走路软选择无抗扭结构', '鞋头太厚导致换挡杆位置不合');
   r.checklist.push('脚踝活动够用但不左右松垮', '鞋底遇油水不易打滑', '拉链/魔术贴关闭后不刮车漆');
@@ -491,10 +500,10 @@ function evaluateBoots(a) {
   } else if (a.usage === 'track') {
     r.headline = '赛道高筒靴：胫骨、铰链和抗扭优先，走路与舒适明显让步';
     r.metrics = metricSet({ 脚踝保护: 99, 步行舒适: 28, 换挡脚感: 72, 防水: 10, 美观: 96 });
-    r.feelNote = '脚踝被限制、走路像穿硬壳，换挡需要重新适应；它是为摔车保护设计，不是为逛街设计。';
+    r.feelNote = '脚踝活动会受限制，换挡需要重新适应；它以摔车保护为主，不适合长时间步行。';
     r.tradeoffs.push('保护最高，但走路累、穿脱慢、夏天热，日常通勤并不舒服');
   } else if (a.usage === 'city') {
-    r.headline = '城市骑行鞋：最好走、最好搭，但必须接受保护上限';
+    r.headline = '城市骑行鞋：步行与日常搭配优先，同时接受保护上限';
     r.metrics = metricSet({ 脚踝保护: 62, 步行舒适: 94, 换挡脚感: 90, 防水: 45, 美观: 92 });
     r.tradeoffs.push('外观和走路更自然，但高筒覆盖、抗扭和胫骨保护有限');
   }
@@ -519,7 +528,7 @@ function evaluateLuggage(a, vehicleResult) {
   if (a.system === 'hard3') {
     r.headline = '硬质三箱：整齐、防盗、硬派，但宽、重、风阻和重心代价最大';
     r.metrics = metricSet({ 容量: 96, 稳定性: a.road === 'offroad' ? 55 : 72, 便利: 82, 耐用: 88, 外观协调: a.look === 'adv' ? 92 : 62 });
-    r.tradeoffs.push('停车钻缝更困难，满载后车尾惯性和侧风影响更明显', '空箱也有自重，支架长期给副车架增加负担');
+    r.tradeoffs.push('通过狭窄空间和推车更困难，满载后车尾惯性和侧风影响更明显', '空箱也有自重，支架长期给副车架增加负担');
   } else if (a.system === 'soft') {
     r.headline = '软包系统：更轻、更适合烂路，但防盗和快速开合要让步';
     r.metrics = metricSet({ 容量: 84, 稳定性: 90, 便利: 62, 耐用: 72, 外观协调: 78 });
@@ -529,21 +538,21 @@ function evaluateLuggage(a, vehicleResult) {
     r.metrics = metricSet({ 容量: 54, 稳定性: 94, 便利: 70, 耐用: 68, 外观协调: 92 });
     r.tradeoffs.push('容量和防盗有限，拿取不如尾箱方便');
   } else {
-    r.tradeoffs.push('尾箱便利，但重心高且靠后，装重物最容易让车变笨');
+    r.tradeoffs.push('尾箱便利，但重心高且靠后，装入重物后会明显增加低速操控负担');
   }
   if (a.road === 'offroad') r.priorities.push('非铺装优先可变形软包和低重心，减少勾挂和支架冲击');
-  if (a.volume === 'huge') r.tradeoffs.push('露营重装必须计算总重量，不是箱子装得下车就扛得住');
+  if (a.volume === 'huge') r.tradeoffs.push('露营重装必须计算总重量；能装下不等于车辆允许载荷、支架和轮胎都能长期承受');
   if (vehicleResult?.primary === 'sport') r.avoid.push('仿赛长期装超大三箱，破坏尾部结构、重心和视觉比例');
-  if (vehicleResult?.primary === 'scooter') r.priorities.push('踏板先用座桶，再补尾箱，别重复堆容量');
+  if (vehicleResult?.primary === 'scooter') r.priorities.push('踏板先利用座桶，再按实际缺口增加尾箱，避免重复增加容量和车尾负担');
   r.styleNote = styleLuggage(a.look, a.system);
   return finalize(r);
 }
 
 function evaluateLights(a) {
-  const r = baseResult('小体积规范截止补光：先把近场铺路和不晃人做对', '射灯不是越亮越安全。错误光型会让对向看不清你，也会让自己在雨雾中看到一片反光。', metricSet({ 有效照明: 78, 光型控制: 90, 电路可靠: 86, 安装简洁: 88, 外观协调: 86 }));
+  const r = baseResult('小体积受控截止补光：先把近场铺路和眩光控制做好', '辅助灯不是越亮越安全。错误光型会影响对向视线，也会让自己在雨雾中看到大片反光。光型和布线描述不代表可以合法上路。', metricSet({ 有效照明: 78, 光型控制: 90, 电路可靠: 86, 安装简洁: 88, 外观协调: 86 }));
   r.priorities.push('确认光型、安装高度和照射角度，不直射对向', '独立保险、合适线径、继电器/控制器和可靠接地', '灯体、接头、开关和控制器具备防水与耐振');
   r.avoid.push('只看瓦数和流明', '直接破线并联原车灯线', '为了外观装超大灯体挡风或干涉转向');
-  r.checklist.push('怠速和低转电压稳定，不影响启动充电', '保留独立总开关和故障旁路', '核对当地道路、年检和使用要求');
+  r.checklist.push('怠速和低转电压稳定，不影响启动充电', '保留独立总开关和故障旁路', '安装和使用前核对当地改装、登记/检验及产品适用要求；越野泛光灯只在非公共道路或获准场景使用');
   if (a.beam === 'spot') {
     r.headline = '远射补光：看得远，但必须补近场并严格控制使用场景';
     r.metrics = metricSet({ 有效照明: 90, 光型控制: 68, 电路可靠: 82, 安装简洁: 78, 外观协调: 80 });
@@ -557,7 +566,7 @@ function evaluateLights(a) {
     r.metrics = metricSet({ 有效照明: 96, 光型控制: 84, 电路可靠: 70, 安装简洁: 45, 外观协调: 72 });
     r.tradeoffs.push('灯多、控制器多、线束多，故障点和外观拥挤同步增加');
   } else {
-    r.tradeoffs.push('有截止的近场灯最适合日常，但极远距离照明不如远射灯');
+    r.tradeoffs.push('有截止的近场灯更容易控制公共道路眩光，但仍需核对当地安装和使用要求，远距离照明也弱于远射灯');
   }
   if (a.electric === 'unknown') r.priorities.unshift('先测原车发电余量和电瓶状态，再谈功率');
   if (a.control === 'smart') r.tradeoffs.push('智能调光更方便，但控制器、兼容和故障排查也更复杂');
@@ -592,18 +601,28 @@ function evaluateIntercom(a) {
 function evaluateTheft(a, vehicleResult) {
   const parking = a.parking || vehicleResult?.answers?.parking;
   const r = baseResult('基础分层防盗：机械锁+定位/报警+停车选择', '防盗不是买一个最贵的锁，而是同时增加偷车时间、噪声、工具要求和暴露概率。', metricSet({ 威慑: 78, 实际阻碍: 80, 隐蔽追踪: 76, 日常便利: 72, 外观影响: 74 }));
-  r.priorities.push('至少两种不同逻辑：机械锁+定位/报警', '优先明亮、有人流、有监控且能锁固定物的位置', '定期检查定位器电量、通知和备用定位');
+  r.priorities.push('至少两种不同逻辑：机械锁+定位/报警', '优先明亮、有人流、有监控的正规停车区；有合适锚点时再连接固定物', '定期检查定位器电量、通知和备用定位');
   r.avoid.push('只依赖龙头锁或单个碟刹锁', '定位器装得明显且只装一个', '为了外观不带任何实体锁');
   r.checklist.push('机械锁不干涉刹车盘、轮胎和线束', '手机异常位移通知正常', '保留购车、改装、钥匙和停车证据并核对保障条款');
   if (parking === 'outdoor' || parking === 'uncertain') {
-    r.headline = '高风险停车：固定物重锁+双定位+异常位移提醒+保障核对';
+    r.headline = a.anchor === 'no'
+      ? '高风险且无固定锚点：轮体机械阻碍+报警/定位，优先换停车点'
+      : '高风险停车：固定物重锁+报警/定位+保障核对';
     r.metrics = metricSet({ 威慑: 94, 实际阻碍: 92, 隐蔽追踪: 90, 日常便利: 42, 外观影响: 48 });
     r.tradeoffs.push('更安全意味着更重、更麻烦、更影响整洁；首先应考虑换停车点');
+    if (a.anchor === 'no') {
+      r.priorities.unshift('没有固定锚点时，先用高强度轮体机械阻碍和报警增加作案时间；定位只能辅助发现，不能替代实体阻碍');
+      r.checklist.push('确认停车规则允许使用的机械锁不会伤车或妨碍他人，不把路边设施当作未经许可的锚点');
+    } else {
+      r.priorities.unshift('用合适的重链连接车架或后轮与正规固定物，并让锁体尽量离地');
+    }
   } else if (parking === 'indoor') {
     r.tradeoffs.push('室内不等于绝对安全，门禁、钥匙和长期无人查看仍是风险');
   }
   if (a.convenience === 'fast') r.tradeoffs.push('10秒方案便利，但只能做基础威慑，不能替代固定锁和停车管理');
-  if (a.convenience === 'full') r.priorities.push('重链连接车架/后轮与固定物，车罩降低目标暴露');
+  if (a.convenience === 'full') r.priorities.push(a.anchor === 'no'
+    ? '叠加报警轮锁、隐蔽定位和车罩，并把更安全的停车位放在第一优先级'
+    : '重链连接车架/后轮与固定物，车罩降低目标暴露');
   if (a.value === 'high' || a.value === 'premium') r.priorities.push('比较盗抢保障、找车协助、找回期限、折旧和免责范围');
   r.styleNote = styleTheft(a.look);
   return finalize(r);
@@ -639,7 +658,7 @@ function buildAccessoryMarketProfile(categoryId, answers, result) {
   return {
     image: `assets/gear/${categoryId}.svg`,
     budgetAdvice: profile.budgetAdvice || '先按使用频率和风险确定预算，不要先追求最高配置。',
-    brandHints: profile.brandHints || ['品牌只作为候选池；具体产品仍要核对尺码、标准、售后和真实评价。'],
+    brandHints: profile.brandHints || ['品牌只作为候选池；具体产品仍要核对尺码、标准、售后和多来源公开评价。'],
     priceWarning: profile.priceWarning || '低价不自动等于不能用，但低到无法说明材料、标准、售后和结构时，不建议只图便宜。',
     searchKeywords: profile.searchKeywords || [result.headline],
     referenceLinks: profile.referenceLinks || []
@@ -649,11 +668,10 @@ function buildAccessoryMarketProfile(categoryId, answers, result) {
 function helmetMarket(a, result) {
   const base = {
     budgetAdvice: '预算必须给试戴、替换镜片、防雾片和耳塞留余量；先买合头的正规全盔，再谈轻量和涂装。',
-    brandHints: ['赛羽：预算紧时可列入入门候选，优先看符合现行标准、尺码和头型合适的具体型号。', '其他正规品牌：按头型、扣具、镜片耗材、售后和试戴感受横向比较，不按品牌名直接判安全。'],
-    priceWarning: '预算在1000元以内时，可以把赛羽等入门型号列入候选，但不建议只追求最低价。先确认合头、符合现行标准、扣具和镜片，再比较材料与涂装。',
-    searchKeywords: ['赛羽 摩托车全盔 GB 811-2022', '摩托车全盔 试戴 头型', '摩托车头盔 防雾片 双D扣'],
+    brandHints: ['品牌只用于建立候选目录，不构成安全或合规背书。', '按具体型号核对 GB 811-2022 标识、生产信息、头型、扣具、镜片耗材、正规渠道和售后。'],
+    priceWarning: '预算在1000元以内时，也应先确认具体型号合头且符合现行国内标准，再比较材料、涂装和附加配置。',
+    searchKeywords: ['摩托车全盔 GB 811-2022 具体型号', '摩托车全盔 试戴 头型', '摩托车头盔 防雾片 双D扣'],
     referenceLinks: [
-      { label: '赛羽 SCOYCO 官方品牌信息', url: 'https://www.scoyco.com/' },
       { label: '国家标准 GB 811-2022（现行）', url: 'https://std.samr.gov.cn/gb/search/gbDetailed?id=F0ADFAAEF0811328E05397BE0A0AD5A4' }
     ]
   };
@@ -686,7 +704,7 @@ function glovesMarket(a, result) {
   return {
     budgetAdvice: race ? '赛道手套不能只压价格：掌根滑块、腕部固定、皮料和版型不到位，外形再像赛道也没有意义。' : '街道和通勤优先买一副真正愿意长期戴、握把自然、腕带可靠的手套，不必为了最高赛道等级牺牲穿戴率。',
     brandHints: ['先看掌根滑块、腕带、指长/掌宽版型和售后尺码政策，再看品牌和硬壳外观。', '同一品牌不同系列的手感差异可能很大，电商评价要重点看“掌宽、指长、是否顶指、虎口是否拉扯”。'],
-    priceWarning: race ? '过低价的“赛道外形手套”可能只是硬壳多，未必有可靠掌根滑块、腕部固定和耐磨结构。' : '太便宜的手套容易在缝线、掌心耐磨和腕带固定上省成本；不要只看拳峰硬壳。',
+    priceWarning: race ? '价格异常低的“赛道外形手套”可能只有外观硬壳，未必有可靠掌根滑块、腕部固定和耐磨结构。' : '价格异常低的手套可能在缝线、掌心耐磨和腕带固定上压缩成本；不能只看拳峰硬壳。',
     searchKeywords
   };
 }
@@ -695,7 +713,7 @@ function armorMarket(a) {
   return {
     budgetAdvice: a.usage === 'track' ? '赛道皮衣和护具要把合身修改、内搭和维护成本一起算，不能只看吊牌价。' : '先保证肩肘背护具位置稳定、外层耐磨和夏季愿意穿，再逐步升级。',
     brandHints: ['优先看护具标识、位置调节、耐磨面料、接缝加强和售后尺码。', '网眼通勤服、街道运动服、摩旅服和皮衣是不同使用方向，不要拿一件衣服四季全覆盖。'],
-    priceWarning: '太便宜但无法说明护具、耐磨层和高磨损区结构的产品，不建议只靠“硬壳看起来很厚”判断。',
+    priceWarning: '价格异常低且无法说明护具、耐磨层和高磨损区结构的产品，不能只凭硬壳外观判断。',
     searchKeywords: a.usage === 'track' ? ['摩托车赛道皮衣 护背 连体', '摩托车分体皮衣 上下连接'] : a.usage === 'touring' ? ['摩旅骑行服 防水 分层 护具', 'ADV骑行服 夏季 网眼'] : ['摩托车骑行服 护具 耐磨', '夏季网眼骑行服 肩肘背']
   };
 }
@@ -720,10 +738,10 @@ function luggageMarket(a) {
 
 function lightsMarket(a) {
   return {
-    budgetAdvice: '射灯预算要包含合格线束、继电器/控制器、保险、支架和规范安装；不能只买灯体。',
+    budgetAdvice: '辅助灯预算要包含合适线束、继电器/控制器、保险、支架和专业安装；不能只买灯体。光型受控、布线整齐或联动远光，都不自动等于允许公共道路安装或使用。',
     brandHints: ['优先比较真实光型、截止、色温、防水、散热、线束和售后。', '对比图要看同一曝光和同一墙面，过曝宣传图不能说明照明效果。'],
-    priceWarning: '太便宜的高功率射灯容易在光型、驱动、防水和线束上省成本，亮不等于安全。',
-    searchKeywords: a.beam === 'spot' ? ['摩托车远射射灯 独立开关 保险', '摩托车射灯 远光 联动'] : a.beam === 'flood' ? ['摩托车宽泛光射灯 非铺装', '摩托车雾灯 低位 宽光'] : ['摩托车射灯 截止线 近场铺路', '摩托车射灯 线束 继电器 保险']
+    priceWarning: '低价高功率产品可能在光型、驱动、防水和线束上压缩成本。购买前还要核对当地改装、登记/检验及使用要求；越野泛光灯只用于非公共道路或获准场景。',
+    searchKeywords: a.beam === 'spot' ? ['摩托车远射辅助灯 独立开关 保险', '摩托车辅助灯 远光联动 当地改装要求'] : a.beam === 'flood' ? ['摩托车宽泛光辅助灯 非公共道路', '摩托车雾灯 低位 宽光'] : ['摩托车辅助灯 截止线 近场铺路', '摩托车辅助灯 线束 继电器 保险']
   };
 }
 
@@ -740,7 +758,7 @@ function theftMarket(a) {
   return {
     budgetAdvice: '防盗预算应和整车、改装件、停车风险匹配。先改善停车环境，再组合机械锁、定位、报警和保障。',
     brandHints: ['不同逻辑叠加比单买最贵的一把锁更有效：固定物重锁、碟刹锁、定位器、报警和车罩。', '保障产品要逐条核对找回期限、折旧、保障金额、免责和理赔材料。'],
-    priceWarning: '太便宜的锁具、定位器和报警器可能在锁芯、材料、信号、续航和通知稳定性上失效；不能只看宣传图粗不粗。',
+    priceWarning: '价格异常低的锁具、定位器和报警器可能在锁芯、材料、信号、续航和通知稳定性上失效；不能只看外观是否粗壮。',
     searchKeywords: a.parking === 'outdoor' ? ['摩托车重链锁 固定物 防剪', '摩托车GPS定位器 异常位移', '摩托车盗抢保障 条款'] : ['摩托车碟刹锁 提醒绳', '摩托车定位器 防拆']
   };
 }
@@ -782,7 +800,7 @@ function styleLuggage(v, system) {
   const text = ({
     clean: '优先同色、窄体、快拆和隐藏支架，保持原车线条。',
     adv: '方箱和金属质感能强化ADV视觉，但小车装过大箱会显得比例失衡。',
-    practical: '实用第一也要控制宽度和高度，避免看起来像长期搬家。',
+    practical: '重视实用也要控制宽度和高度，避免箱体体积过大而影响整车比例。',
     hidden: '平时不想看见支架，优先软包、尾包或真正快拆的系统。'
   })[v] || '箱包应服从整车比例。';
   return system === 'hard3' ? `${text} 三硬箱最容易让车显得“满”，尺寸必须和车架体量匹配。` : text;

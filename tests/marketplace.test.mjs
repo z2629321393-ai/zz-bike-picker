@@ -4,19 +4,17 @@ import { evaluateAccessory } from '../src/accessories.js';
 import { isAggregateVehicle, marketplaceLinks, motofanLinks, safeGearImage, safeImage } from '../src/marketplace.js';
 import { normalizeVehicle } from '../src/engine.js';
 
-test('头盔入门预算包含赛羽候选与低价提醒', () => {
+test('头盔入门预算保留具体候选，但通用建议不做品牌安全背书', () => {
   const result = evaluateAccessory('helmet', {
     usage: 'city', fit: 'unknown', priority: 'weight', style: 'stealth', budget: 'entry'
   });
-  assert.match(result.brandHints.join(' '), /赛羽/);
-  assert.match(result.priceWarning, /预算在1000元以内.*赛羽.*不建议只追求最低价/);
+  assert.match(result.brandHints.join(' '), /不构成安全或合规背书/);
+  assert.doesNotMatch(result.brandHints.join(' '), /赛羽/);
+  assert.match(result.priceWarning, /预算在1000元以内.*具体型号.*现行国内标准/);
   assert.doesNotMatch(result.priceWarning, /穷哥们|太便宜/);
   assert.match(result.budgetAdvice, /现行 GB 811-2022/);
-  assert.deepEqual(result.referenceLinks.map((item) => item.label), [
-    '赛羽 SCOYCO 官方品牌信息',
-    '国家标准 GB 811-2022（现行）'
-  ]);
-  assert.equal(result.referenceLinks[1].url, 'https://std.samr.gov.cn/gb/search/gbDetailed?id=F0ADFAAEF0811328E05397BE0A0AD5A4');
+  assert.deepEqual(result.referenceLinks.map((item) => item.label), ['国家标准 GB 811-2022（现行）']);
+  assert.equal(result.referenceLinks[0].url, 'https://std.samr.gov.cn/gb/search/gbDetailed?id=F0ADFAAEF0811328E05397BE0A0AD5A4');
   assert.ok(result.searchKeywords.length >= 2);
 });
 

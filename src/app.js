@@ -101,6 +101,8 @@ const els = {
   accessoryPriceWarning: document.getElementById('accessoryPriceWarning'),
   accessorySearchKeywords: document.getElementById('accessorySearchKeywords'),
   accessoryMarketLinks: document.getElementById('accessoryMarketLinks'),
+  accessoryProductLabel: document.getElementById('accessoryProductLabel'),
+  accessoryProductTitle: document.getElementById('accessoryProductTitle'),
   accessoryProductIntro: document.getElementById('accessoryProductIntro'),
   accessoryProductLadder: document.getElementById('accessoryProductLadder'),
   accessoryHotlist: document.getElementById('accessoryHotlist')
@@ -391,20 +393,20 @@ function renderBody() {
 function renderCost() {
   return `<div class="dual-grid">
     ${controlCard('maintenance', '保养维护意愿', '机油、轮胎、刹车、维修和定期检查', [['low', '基础就行'], ['mid', '正常养护'], ['high', '愿意升级'], ['whatever', '体验优先']])}
-    ${controlCard('ownership', '持有成本承受', '油耗、保险、折旧、摔车件和停车风险', [['low', '越省越好'], ['mid', '合理即可'], ['high', '值得就行'], ['notcare', '开心优先']])}
+    ${controlCard('ownership', '持有成本承受', '油耗、保险、折旧、摔车件和停车风险', [['low', '尽量节省'], ['mid', '合理即可'], ['high', '值得就行'], ['notcare', '体验优先']])}
   </div>`;
 }
 
 function renderStyle() {
   return `<div class="dual-grid">
-    ${controlCard('looks', '外观精致要求', '你愿不愿意为了外形接受实用性损失', [['low', '能看就行'], ['mid', '顺眼即可'], ['high', '必须精致'], ['unique', '越怪越好']])}
+    ${controlCard('looks', '外观精致要求', '你愿不愿意为了外形接受实用性损失', [['low', '实用即可'], ['mid', '顺眼即可'], ['high', '重视精致感'], ['unique', '个性鲜明']])}
     ${controlCard('mod', '改装倾向', '原厂、轻改、性能升级还是重度姿态化', [['none', '完全原厂'], ['light', '轻改实用'], ['medium', '性能升级'], ['heavy', '重度改装']])}
   </div>`;
 }
 
 function renderRoadLoad() {
   return `<div class="dual-grid">
-    ${controlCard('road', '主要路况', '你真正骑得最多的路，不是梦想里的路', [['city', '城市铺装'], ['mixed', '城市+郊区'], ['bad', '烂路/乡道'], ['mountain', '跑山弯道']])}
+    ${controlCard('road', '主要路况', '请按大多数时候的实际骑行路况选择', [['city', '城市铺装'], ['mixed', '城市+郊区'], ['bad', '烂路/乡道'], ['mountain', '跑山弯道']])}
     ${controlCard('load', '载人装载', '长期带人、带箱会改变车的重心和需求', [['solo', '基本单人'], ['passenger', '经常带人'], ['luggage', '经常带箱'], ['both', '带人+行李']])}
   </div>`;
 }
@@ -457,12 +459,12 @@ function updateBodyLive() {
 }
 
 function bodyFitText(height, weight) {
-  if (height >= 188) return { title: '优先大车架', desc: '小踏板和迷你复古容易显小。重点试ADV、大车架街车和中大型巡航。' };
+  if (height >= 188) return { title: '重点核对膝部空间与骑姿', desc: '身高只是初筛。试坐时重点确认腿部空间、车把距离、坐姿和长时间舒适度。' };
   if (height >= 180) return { title: '注意人车比例', desc: '小尺寸车型未必不适合，但要重点确认膝部空间、上身姿态和长时间舒适度。' };
-  if (height <= 160) return { title: '座高是硬门槛', desc: '优先低座、窄坐垫和轻车。高座拉力必须实际试撑地和低速掉头。' };
+  if (height <= 160) return { title: '重点核对落脚与低速负担', desc: '座高不能单独决定适配；还要结合腿长、坐垫宽度、车重与重心，实际体验撑地、掉头和挪车。' };
   if (height <= 168) return { title: '先控座高和车重', desc: '多数街车和踏板可选，ADV要看坐垫宽度，不要只看座高参数。' };
-  if (weight >= 100) return { title: '车架与避震要够用', desc: '过小过轻的车可能显得局促，带人时更要看后避震和制动余量。' };
-  return { title: '主流车型适配面广', desc: '你的人车比例没有明显硬伤，最终差异主要来自用途、预算和成本。' };
+  if (weight >= 100) return { title: '核对空间、载荷与避震', desc: '尺寸较小的车型可能空间不足；带人或装载时，还要核对允许载荷、后避震与制动余量。' };
+  return { title: '当前未发现明显体型限制', desc: '这只是身高与体重初筛，最终仍要结合腿长、力量、坐垫宽度、重心和实际试坐判断。' };
 }
 
 function getHostSpeech(id) {
@@ -571,7 +573,7 @@ function buildResult() {
   document.getElementById('vehicleGrid').innerHTML = ranking.recommendations.length
     ? ranking.recommendations.map((item, index) => vehicleCard(item, index)).join('')
     : noVehicleCard();
-  document.getElementById('conflictList').innerHTML = renderAdvice(conflicts.length ? conflicts : ['你的主要答案没有明显打架，下一步重点是试坐、当地落地价和售后。'], conflicts.length ? '' : 'ok');
+  document.getElementById('conflictList').innerHTML = renderAdvice(conflicts.length ? conflicts : ['你的主要答案之间没有明显冲突，下一步重点是试坐、当地落地价和售后。'], conflicts.length ? '' : 'ok');
   document.getElementById('avoidAdvice').innerHTML = renderAdvice(avoidAdvice, 'bad');
   renderScoreBars(ranking.sortedTypes);
   setText('copyText', copyText);
@@ -599,27 +601,27 @@ function vehicleCard(item, index) {
       <img src="${escapeHtml(image)}" alt="${escapeHtml(vehicle.brand)} ${escapeHtml(vehicle.model)}" loading="lazy" onerror="this.src='assets/vehicles/${escapeHtml(vehicle.type)}.svg'">
       <span>${isPublicPhoto ? '公开页面车型图 · 请复核来源' : '车型方向示意图 · 非具体实拍'}</span>
     </div>
-    <div class="vehicle-rank">RECOMMEND ${String(index + 1).padStart(2, '0')}</div>
+    <div class="vehicle-rank">候选 ${String(index + 1).padStart(2, '0')}</div>
     <h4>${escapeHtml(vehicle.brand)}｜${escapeHtml(vehicle.model)}</h4>
     <div class="vehicle-tags">
       ${specs.map((spec) => `<span>${escapeHtml(spec)}</span>`).join('')}
       <span class="quality">${escapeHtml(dataQualityLabel(vehicle.dataQuality))}</span>
     </div>
     <div class="reason-list">${item.reasons.slice(0, 3).map((reason) => `<span>${escapeHtml(reason)}</span>`).join('')}</div>
-    <p><b>现实代价：</b>${escapeHtml(item.warnings[0] || vehicle.warn)}</p>
+    <p><b>主要取舍：</b>${escapeHtml(item.warnings[0] || vehicle.warn)}</p>
     <div class="vehicle-source-actions">
       ${source.direct ? `<a class="mini-link primary" href="${escapeHtml(source.direct)}" target="_blank" rel="noopener noreferrer">摩托范看图和参数</a>` : `<a class="mini-link primary" href="${escapeHtml(source.search)}" target="_blank" rel="noopener noreferrer">搜索摩托范资料</a>`}
       <a class="mini-link" href="${escapeHtml(source.search)}" target="_blank" rel="noopener noreferrer">继续查车型</a>
     </div>
-    <div class="match-line"><span>点击查看完整解释</span><strong>${item.score}</strong></div>
+    <div class="match-line"><span>规则匹配分（仅用于本站排序）</span><strong>${item.score}</strong></div>
   </article>`;
 }
 
 function noVehicleCard() {
   return `<article class="vehicle-card">
-    <div class="vehicle-rank">NO CLEAR MATCH</div>
+    <div class="vehicle-rank">暂无明确匹配</div>
     <h4>当前没有足够可靠的精确匹配</h4>
-    <p><b>建议：</b>先按结果页的车型大类去试坐。车型库数据不完整时，系统不会硬装成“精确推荐”。</p>
+    <p><b>建议：</b>先按结果页的车型大类去试坐。车型库数据不完整时，页面只给方向，不会包装成精确车型结论。</p>
   </article>`;
 }
 
@@ -631,7 +633,7 @@ function renderDecisionSummary(profile) {
   ];
   return columns.map(([className, title, items]) => `
     <div class="summary-column ${className}">
-      <span class="decision-label">${className === 'must' ? 'Must have' : className === 'trade' ? 'Trade-off' : 'Red flag'}</span>
+      <span class="decision-label">${className === 'must' ? '核心条件' : className === 'trade' ? '主要取舍' : '重点核验'}</span>
       <h3>${title}</h3>
       <ul>${(items.length ? items : ['当前没有明显新增条件']).map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
     </div>
@@ -644,11 +646,11 @@ function renderAdvice(items, className = '') {
 
 function renderScoreBars(sortedTypes) {
   const max = Math.max(...sortedTypes.map((item) => item[1]), 1);
-  document.getElementById('scoreBars').innerHTML = sortedTypes.map(([key, value]) => `
+  document.getElementById('scoreBars').innerHTML = sortedTypes.map(([key, value], index) => `
     <div class="score-row">
       <b>${escapeHtml(TYPE_LABELS[key].short)}</b>
       <div class="score-line"><span style="width:${Math.round((value / max) * 100)}%"></span></div>
-      <em>${value}</em>
+      <em>${index === 0 ? '优先' : index < 3 ? '可选' : '参考'}</em>
     </div>
   `).join('');
 }
@@ -674,8 +676,10 @@ function openVehicleModal(id) {
   const vehicle = item.vehicle;
   const source = motofanLinks(vehicle);
   const image = safeImage(vehicle);
+  const confidenceLevel = item.confidence >= 80 ? '较高' : item.confidence >= 60 ? '中等' : '较低';
   els.vehicleModalContent.innerHTML = `<div class="modal-body">
-    <span class="decision-label">匹配度 ${item.score} · 数据可信度 ${item.confidence}</span>
+    <span class="decision-label">规则匹配分 ${item.score}（仅用于本站排序） · 资料核验程度 ${confidenceLevel}</span>
+    <p class="modal-score-note">资料核验程度不代表安全认证、合规结论或国内在售。</p>
     <div class="vehicle-modal-media">
       <img src="${escapeHtml(image)}" alt="${escapeHtml(vehicle.brand)} ${escapeHtml(vehicle.model)}" onerror="this.src='assets/vehicles/${escapeHtml(vehicle.type)}.svg'">
       <div><h3>${escapeHtml(vehicle.brand)}｜${escapeHtml(vehicle.model)}</h3><p>图片用于识别车型方向；公开图和参数仍以来源页及品牌官网为准。</p></div>
@@ -689,8 +693,8 @@ function openVehicleModal(id) {
       <span class="quality">${escapeHtml(dataQualityLabel(vehicle.dataQuality))}</span>
     </div>
     <div class="modal-section"><h4>为什么进入名单</h4><div class="modal-list">${item.reasons.map((reason) => `<div>${escapeHtml(reason)}</div>`).join('')}</div></div>
-    <div class="modal-section"><h4>现实代价</h4><div class="modal-list">${item.warnings.map((warning) => `<div>${escapeHtml(warning)}</div>`).join('') || `<div>${escapeHtml(vehicle.warn)}</div>`}</div></div>
-    <div class="modal-section"><h4>继续核验</h4><p>${escapeHtml(vehicle.status)}。${vehicle.year ? `年款/发布时间参考：${vehicle.year}。` : '年款信息待补充。'}图片、指导价、实际成交价和在售状态都可能变化，请再到公开来源与当地经销商核验。</p>
+    <div class="modal-section"><h4>主要取舍</h4><div class="modal-list">${item.warnings.map((warning) => `<div>${escapeHtml(warning)}</div>`).join('') || `<div>${escapeHtml(vehicle.warn)}</div>`}</div></div>
+    <div class="modal-section"><h4>继续核验</h4><p>${escapeHtml(vehicleStatusNote(vehicle))}</p>
       <div class="market-link-row">
         ${source.direct ? `<a class="market-link primary" href="${escapeHtml(source.direct)}" target="_blank" rel="noopener noreferrer">摩托范车型页</a>` : ''}
         <a class="market-link" href="${escapeHtml(source.search)}" target="_blank" rel="noopener noreferrer">搜索摩托范：${escapeHtml(source.keyword)}</a>
@@ -963,7 +967,7 @@ function renderAccessoryHotlist(category) {
     return;
   }
 
-  els.accessoryHotlist.innerHTML = products.map((product, index) => {
+  els.accessoryHotlist.innerHTML = products.map((product) => {
     const signal = product.marketSignal;
     const status = signal
       ? `${signal.platform}公开快照 · ${signal.observedAt}`
@@ -973,7 +977,7 @@ function renderAccessoryHotlist(category) {
     const officialUrl = safeProductUrl(product.officialUrl || '');
     const links = marketplaceLinks(product.searchKeyword || `${product.brand} ${product.model}`);
     return `<article class="hotlist-card">
-      <div class="hotlist-rank">${String(index + 1).padStart(2, '0')}</div>
+      <div class="hotlist-marker ${signal ? 'is-snapshot' : ''}" aria-hidden="true"></div>
       <div class="hotlist-main"><small>${escapeHtml(status)} · ${escapeHtml(recordTypeLabel(product.recordType))}</small><h4>${escapeHtml(product.brand)}｜${escapeHtml(product.model)}</h4><p>${escapeHtml(description)}</p><p><b>国内状态：</b>${escapeHtml(product.cnAvailability)}</p></div>
       <div class="hotlist-price">${escapeHtml(product.priceBand || '价格待核验')}</div>
       <div class="hotlist-actions">
@@ -989,9 +993,14 @@ function renderAccessoryHotlist(category) {
 function renderAccessoryProductLadder(category, ladder) {
   if (!els.accessoryProductLadder || !els.accessoryProductIntro) return;
   const items = ladder?.items || [];
+  const isTheft = category.id === 'theft';
+  setText('accessoryProductLabel', isTheft ? '组合防护层' : '优先候选');
+  setText('accessoryProductTitle', isTheft
+    ? '防盗不是三选一：按停车风险把机械阻碍、报警、定位和管理组合起来。'
+    : '从最匹配开始，比较符合核心筛选条件的可选项。');
   els.accessoryProductIntro.textContent = ladder?.intro || '当前没有足够可靠的相近产品数据。';
   if (!items.length) {
-    els.accessoryProductLadder.innerHTML = '<article class="product-ladder-empty">暂时没有守住核心场景的可核验产品，请先按结构和使用条件筛选。</article>';
+    els.accessoryProductLadder.innerHTML = '<article class="product-ladder-empty">暂时没有同时符合这些核心筛选条件的产品，请调整条件或先到线下核对。</article>';
     return;
   }
 
@@ -1042,15 +1051,32 @@ function renderAccessoryList(items) {
 }
 
 function availabilityLabel(vehicle = {}) {
+  if (vehicle.dataQuality === 'sample' || vehicle.source === 'sample' || isAggregateVehicle(vehicle)) {
+    return '车型方向示例 · 国内状态待核验';
+  }
   const status = String(vehicle.status || '');
   if (/水车|报废|无手续|不上路|纯摆件|仅内容/.test(status)) return '国内不可合法上路';
-  if (/停产|收藏/.test(status)) return '国内新车通常买不到 · 仅二手/收藏';
-  if (/在售/.test(status)) return '国内在售方向 · 库存需复核';
+  if (/停产|停售|收藏|曾在售/.test(status)) return '国内新车通常买不到 · 仅二手/收藏';
+  if (/国内未引进|国内未在售|海外在售|当前待核验|待核验/.test(status)) return '国内正规渠道与当前库存待核验';
+  if (/国内在售/.test(status)) return '国内在售方向 · 具体版本和库存需复核';
+  if (/^在售(?:\/|$)/.test(status)) return '公开资料显示在售方向 · 国内渠道和库存需复核';
   return '国内可购状态待复核';
 }
 
+function vehicleStatusNote(vehicle = {}) {
+  if (vehicle.dataQuality === 'sample' || vehicle.source === 'sample' || isAggregateVehicle(vehicle)) {
+    return '这是车型方向示例；具体型号、年款、国内在售、上牌与库存状态都需要逐款核验。';
+  }
+  const year = vehicle.year ? `年款/发布时间参考：${vehicle.year}。` : '年款信息待补充。';
+  return `${vehicle.status || '状态待核验'}。${year}图片、指导价、实际成交价和在售状态都可能变化，请再到公开来源与当地正规经销商核验。`;
+}
+
 function renderAccessoryMetrics(metrics = []) {
-  return metrics.map((item) => `<div class="gear-metric"><div><b>${escapeHtml(item.label)}</b><span>${Number(item.value) || 0}</span></div><div class="gear-metric-bar"><i style="width:${Math.max(0, Math.min(100, Number(item.value) || 0))}%"></i></div></div>`).join('');
+  return metrics.map((item) => {
+    const value = Math.max(0, Math.min(100, Number(item.value) || 0));
+    const level = value >= 80 ? '高' : value >= 60 ? '中' : '低';
+    return `<div class="gear-metric"><div><b>${escapeHtml(item.label)}</b><span>${level}</span></div><div class="gear-metric-bar" aria-label="${escapeHtml(item.label)}取向：${level}"><i style="width:${value}%"></i></div></div>`;
+  }).join('');
 }
 
 async function copyPlainText(text) {

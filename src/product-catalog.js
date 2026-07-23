@@ -3,6 +3,13 @@ import { EXPANDED_PRODUCT_CATALOG } from './product-catalog-expanded.js';
 
 export const CATALOG_UPDATED_AT = '2026-07-23';
 
+const CANONICAL_FAMILY_BY_ID = Object.freeze({
+  'light-denali-d3': 'denali-d3',
+  'lights-denali-d3': 'denali-d3',
+  'luggage-givi-trekker': 'givi-trekker-outback',
+  'luggage-givi-trekker-v64': 'givi-trekker-outback'
+});
+
 const inferRecordType = (data) => {
   const model = `${data.model || ''}`;
   if (data.recordType) return data.recordType;
@@ -26,8 +33,14 @@ const item = (data) => {
       }
     : null;
   const sourceType = !marketSignal && /(热卖|排行|热门|热度)/.test(data.sourceType || '')
-    ? '公开资料（无独立热度快照）'
+    ? '公开资料（无独立市场快照）'
     : (data.sourceType || '公开资料');
+  const rawReviewSummary = data.reviewSummary || '';
+  const reviewSummary = !marketSignal && /(热卖|排行|榜|TOP\s*\d|销量|售出|评论量)/i.test(rawReviewSummary)
+    ? '公开页面曾收录这个候选，但缺少带日期的独立市场快照；这里只作为目录参考，不代表市场表现先后。'
+    : !marketSignal
+      ? rawReviewSummary.replaceAll('热门', '常见').replaceAll('热度', '公开资料能见度')
+      : rawReviewSummary;
   return {
     confidence: 'medium',
     sourceType: '公开资料',
@@ -47,7 +60,9 @@ const item = (data) => {
       ? '国内使用前请核对该具体型号的 GB 811-2022 标志、生产信息与正规销售渠道。'
       : '',
     ...data,
+    canonicalFamilyId: data.canonicalFamilyId || CANONICAL_FAMILY_BY_ID[data.id] || data.id,
     sourceType,
+    reviewSummary,
     marketSignal
   };
 };
@@ -67,7 +82,7 @@ export const PRODUCT_CATALOG = Object.freeze([
   item({ id:'glove-astar-smx1', categoryId:'gloves', brand:'Alpinestars', model:'SMX-1 Air V2', priceBand:'约450—800元', tier:2, confidence:'high', officialUrl:'https://www.alpinestars.com/collections/all-road-products/products/smx-1-air-v2-gloves', fit:{ usage:['city','mountain'], protection:['urban','roadSport'], feel:['thin','balanced'], season:['hot','mild'], style:['race','stealth'] }, idealFor:'夏季城市和街道运动，想要较好抓握、通风和基础硬壳防护的人。', reviewSummary:'官方说明其采用穿孔皮革和网布，定位街道/城市，强调掌部抓握区和操作灵敏度。', compromise:'短护腕，腕部覆盖和赛道级掌根结构有限。' }),
   item({ id:'glove-astar-sp8', categoryId:'gloves', brand:'Alpinestars', model:'SP-8 V3', priceBand:'约850—1500元', tier:3, confidence:'high', officialUrl:'https://www.alpinestars.com/products/sp-8-v3', fit:{ usage:['mountain','touring'], protection:['roadSport'], feel:['balanced','breakin'], season:['mild'], style:['race','match','stealth'] }, idealFor:'跑山、街道运动和想要长护腕但不想上纯赛道的人。', reviewSummary:'官方定位为带赛车基因的通用街道手套，山羊皮、预弯和掌拇指抓握区兼顾保护与活动。', compromise:'比短手套热、穿脱慢，掌心反馈仍不如轻量通勤手套直接。' }),
   item({ id:'glove-scoyco-sr8', categoryId:'gloves', brand:'赛羽', model:'SR-8公路赛道手套', priceBand:'约600—1200元', tier:3, confidence:'medium', officialUrl:'https://jp.scoyco.com/products.html', fit:{ usage:['mountain','track'], protection:['race','roadSport'], feel:['breakin','protectFirst'], season:['mild'], style:['race','match'] }, idealFor:'预算有限、想体验长护腕和赛道结构，又能接受先试尺码的人。', reviewSummary:'官方产品目录列有SR-8公路赛道手套；购买前应重点核对掌根滑块、双腕带、预弯和缝线。', compromise:'版型与皮料手感需要实际试戴，不能只看赛道外形。' }),
-  item({ id:'glove-astar-gppro', categoryId:'gloves', brand:'Alpinestars', model:'GP Pro R3', priceBand:'约1600—2600元', tier:5, confidence:'high', officialUrl:'https://www.alpinestars.com/products/gp-pro-r3-gloves-black-white', fit:{ usage:['track'], protection:['race'], feel:['protectFirst','breakin'], season:['mild'], style:['race'] }, idealFor:'赛道日、明确高速摔车风险、愿意牺牲通勤舒适的人。', reviewSummary:'官方称其经过MotoGP和WSBK赛道测试，采用DFS护具、芳纶加强、指桥和多种皮革。', compromise:'更紧、更硬、更热，低速抓握容易有明显“握屎感”，日常穿戴率较低。' }),
+  item({ id:'glove-astar-gppro', categoryId:'gloves', brand:'Alpinestars', model:'GP Pro R3', priceBand:'约1600—2600元', tier:5, confidence:'high', officialUrl:'https://www.alpinestars.com/products/gp-pro-r3-gloves-black-white', fit:{ usage:['track'], protection:['race'], feel:['protectFirst','breakin'], season:['mild'], style:['race'] }, idealFor:'赛道日、明确高速摔车风险、愿意牺牲通勤舒适的人。', reviewSummary:'官方称其经过MotoGP和WSBK赛道测试，采用DFS护具、芳纶加强、指桥和多种皮革。', compromise:'更紧、更硬、更热，低速操作反馈会明显减弱，日常穿戴率较低。' }),
 
   // 骑行服/护具
   item({ id:'armor-scoyco-mesh', categoryId:'armor', brand:'赛羽', model:'网眼通勤骑行服系列', priceBand:'约400—1000元', tier:1, confidence:'medium', officialUrl:'https://www.scoyco-japan.com/shop', fit:{ usage:['commute'], climate:['hot','mild'], wearing:['fast','normal'], look:['daily','sport'], priority:['heat','ugly'] }, idealFor:'夏季通勤、想提高真实穿戴率的人。', reviewSummary:'品牌当前产品线覆盖夹克、裤装和护具；具体型号需核对肩肘背护具、耐磨区和版型。', compromise:'轻量网眼服的耐磨、覆盖和高速保护上限有限。' }),
@@ -105,7 +120,7 @@ export const PRODUCT_CATALOG = Object.freeze([
   item({ id:'intercom-vimoto-v10x', categoryId:'intercom', brand:'维迈通', model:'V10X', priceBand:'约450—800元（活动浮动大）', tier:3, confidence:'high', sourceType:'官网+公开横评', officialUrl:'https://www.vimoto.com/headset/v10x', reviewUrl:'https://www.bilibili.com/video/BV14G1RYpEkT/', fit:{ group:['solo','pair','small','large'], priority:['music','talk','nav'], helmetFit:['normal','large'], operation:['buttons','voice'], look:['tech','notcare'] }, idealFor:'国内车队生态、音乐与多人对讲都想兼顾的人。', reviewSummary:'官网标注JBL声学套件、哈曼调校、神经网络降噪、DODO/SCC对讲；公开横评有与Cardo进行风压对比。', compromise:'功能多意味着设置和生态更复杂，具体车队兼容性要提前统一。' }),
   item({ id:'intercom-asmax-z1', categoryId:'intercom', brand:'ASMAX', model:'Z1', priceBand:'约700—1300元（平台波动）', tier:3, confidence:'medium', officialUrl:'https://www.asmax.net/', reviewUrl:'https://www.bilibili.com/video/BV1LH4y1Z7HZ/', fit:{ group:['solo','pair','small'], priority:['music','nav','talk'], helmetFit:['normal','large'], operation:['voice','buttons'], look:['tech'] }, idealFor:'喜欢智能语音、外观和新品牌生态，愿意研究APP的人。', reviewSummary:'官方将Z1定位为Z世代骑行头盔蓝牙耳机；公开深度体验视频讨论F1/Z1的性价比。', compromise:'生态与长期售后认知不如老牌成熟，建议看固件、APP和售后反馈。' }),
   item({ id:'intercom-asmax-s2', categoryId:'intercom', brand:'ASMAX', model:'S2', priceBand:'海外官方约15899日元，国内价需核验', tier:3, confidence:'high', officialUrl:'https://asmax.customjapan.net/', fit:{ group:['solo','pair','small'], priority:['talk','nav'], helmetFit:['tight','normal'], operation:['voice','buttons'], look:['slim','tech'] }, idealFor:'想要较轻机身、入门Mesh与语音操作的人。', reviewSummary:'日本官方标注41g、HiFi、ENC、快充、蓝牙5.4，定位入门Mesh。', compromise:'国内渠道价格与售后需核验，音质和大车队上限低于旗舰。' }),
-  item({ id:'intercom-ejeas-q8', categoryId:'intercom', brand:'爱骑仕', model:'Q8', priceBand:'官方促销约598元', tier:3, confidence:'high', officialUrl:'https://www.ejeas.cn/product/q8/', reviewUrl:'https://www.bilibili.com/video/BV13KpceMEB3/', fit:{ group:['small','large'], priority:['talk','nav'], helmetFit:['normal','large'], operation:['buttons','simple'], look:['tech','notcare'] }, idealFor:'6人以内固定车队、预算有限、需要Mesh自动重连思路的人。', reviewSummary:'官方标注6人Mesh、1公里开放距离、Mesh 9小时、蓝牙对讲17小时、音乐29小时；公开视频强调断联自动连接。', compromise:'人数和距离是理想条件，跨品牌与复杂地形不能按宣传上限理解。' }),
+  item({ id:'intercom-ejeas-q8', categoryId:'intercom', brand:'爱骑仕', model:'Q8', priceBand:'官方促销约598元', tier:3, confidence:'high', officialUrl:'https://www.ejeas.cn/product/q8/', reviewUrl:'https://www.bilibili.com/video/BV13KpceMEB3/', fit:{ group:['small'], priority:['talk','nav'], helmetFit:['normal','large'], operation:['buttons','simple'], look:['tech','notcare'] }, idealFor:'6人以内固定车队、预算有限、需要Mesh自动重连思路的人。', reviewSummary:'官方标注6人Mesh、1公里开放距离、Mesh 9小时、蓝牙对讲17小时、音乐29小时；公开视频强调断联自动连接。', compromise:'人数和距离是理想条件，跨品牌与复杂地形不能按宣传上限理解。' }),
   item({ id:'intercom-vimoto-v11x', categoryId:'intercom', brand:'维迈通', model:'V11X', priceBand:'约900—1500元（平台核验）', tier:4, confidence:'medium', officialUrl:'https://www.vimoto.com/', fit:{ group:['small','large'], priority:['music','talk'], helmetFit:['normal','large'], operation:['voice','buttons'], look:['tech'] }, idealFor:'希望维迈通最新一代体验、固定车队统一生态的人。', reviewSummary:'官网当前产品阵列将V11X列为主力新型号；具体规格与价格应进入官方详情和平台核验。', compromise:'新品实际长期稳定与价格性价比需要更多用户周期反馈。' }),
   item({ id:'intercom-cardo-spirit-hd', categoryId:'intercom', brand:'Cardo', model:'Spirit HD', priceBand:'约900—1500元', tier:3, confidence:'high', officialUrl:'https://cardosystems.cn/', fit:{ group:['pair'], priority:['music','nav','call'], helmetFit:['tight','normal'], operation:['voice','buttons'], look:['slim','stealth'] }, idealFor:'两人或单人、重视防水和音质、无需大Mesh车队的人。', reviewSummary:'Cardo官网产品线中Spirit HD为基础高清音频方向，品牌强调防水与语音生态。', compromise:'多人组网和旗舰JBL/DMC能力有限。' }),
   item({ id:'intercom-cardo-freecom4x', categoryId:'intercom', brand:'Cardo', model:'Freecom 4X', priceBand:'约1800—2800元', tier:4, confidence:'high', officialUrl:'https://cardosystems.cn/', fit:{ group:['pair','small'], priority:['music','talk','call'], helmetFit:['normal','large'], operation:['voice','buttons'], look:['slim','premium'] }, idealFor:'2—4人、重视JBL音质、语音和防水，但不需要大Mesh的人。', reviewSummary:'Cardo官网将Freecom 4X列为中高阶产品，适合多数普通骑士的蓝牙对讲和JBL音频。', compromise:'价格高于国产，复杂车队Mesh不如Packtalk。' }),
@@ -128,7 +143,7 @@ const HARD_MATCH_KEYS = {
   armor: ['usage'],
   boots: ['usage'],
   luggage: ['system'],
-  lights: ['beam'],
+  lights: ['usage', 'beam'],
   intercom: ['group'],
   theft: ['value']
 };
@@ -136,13 +151,27 @@ const HARD_MATCH_KEYS = {
 const includesFit = (product, key, value) => !value || product.fit?.[key]?.includes(value);
 
 const isCoreCompatible = (categoryId, product, answers) => {
+  if (categoryId === 'gloves' && answers.usage === 'track') {
+    // 赛道场景不能因为保护选项自相矛盾而降成城市或摩旅手套。
+    return includesFit(product, 'usage', 'track') && includesFit(product, 'protection', 'race');
+  }
+
+  if (categoryId === 'luggage') {
+    // 装载用途和系统会影响乘客空间、上下车与重心；非铺装还要额外限制路况适配。
+    return includesFit(product, 'usage', answers.usage)
+      && includesFit(product, 'system', answers.system)
+      && (answers.road !== 'offroad' || includesFit(product, 'road', 'offroad'));
+  }
+
   if (categoryId === 'lights' && answers.usage === 'city') {
     // 公共道路城市使用优先守住有截止的光型，不能因用户误选泛光而推荐眩光方案。
     return includesFit(product, 'usage', 'city') && includesFit(product, 'beam', 'cutoff');
   }
 
   if (categoryId === 'theft' && ['outdoor', 'uncertain'].includes(answers.parking)) {
-    return includesFit(product, 'parking', answers.parking) && includesFit(product, 'value', answers.value);
+    return includesFit(product, 'parking', answers.parking)
+      && includesFit(product, 'value', answers.value)
+      && includesFit(product, 'anchor', answers.anchor);
   }
 
   return (HARD_MATCH_KEYS[categoryId] || []).every((key) => includesFit(product, key, answers[key]));
@@ -153,6 +182,9 @@ const safetyPriority = (categoryId, product, answers) => {
     const canAnchor = ['yes', 'sometimes'].includes(answers.anchor);
     if (product.id === 'theft-layered') return canAnchor ? 120 : -20;
     if (product.id === 'theft-abus-chain') return canAnchor ? 70 : -30;
+    if (product.id === 'theft-abus-8077') return canAnchor ? 35 : 120;
+    if (product.id === 'theft-xena-xx15') return canAnchor ? 30 : 110;
+    if (product.id === 'theft-kovix-alarm') return canAnchor ? 25 : 100;
     if (product.id === 'theft-moni9') return canAnchor ? 45 : 90;
     if (product.id === 'theft-gps-generic') return canAnchor ? 30 : 65;
     if (['theft-disc-basic', 'theft-apple-airtag'].includes(product.id)) return -100;
@@ -179,7 +211,9 @@ const answerMatchScore = (categoryId, product, answers) => {
     else score -= 4;
   });
   const confidenceBonus = product.confidence === 'high' ? 3 : product.confidence === 'medium' ? 1 : 0;
-  const popularityBonus = Math.max(-2, Math.min(5, Math.round(((product.popularityScore || 50) - 50) / 10)));
+  const popularityBonus = product.marketSignal
+    ? Math.max(-2, Math.min(5, Math.round(((product.popularityScore || 50) - 50) / 10)))
+    : 0;
   return {
     score: score + confidenceBonus + popularityBonus + safetyPriority(categoryId, product, answers),
     matched,
@@ -202,13 +236,20 @@ export function recommendProductLadder(categoryId, answers = {}, result = null) 
   if (!products.length) return { exactEnough: false, intro: '当前还没有可核验的产品数据。', items: [] };
 
   const ranked = products.map((product) => ({ product, ...answerMatchScore(categoryId, product, answers) }))
-    .sort((a, b) => b.score - a.score || b.matched - a.matched || (b.product.popularityScore || 0) - (a.product.popularityScore || 0) || a.product.tier - b.product.tier);
+    .sort((a, b) => b.score - a.score
+      || b.matched - a.matched
+      || (b.product.marketSignal ? b.product.popularityScore || 0 : 0) - (a.product.marketSignal ? a.product.popularityScore || 0 : 0)
+      || a.product.tier - b.product.tier
+      || `${a.product.canonicalFamilyId}`.localeCompare(`${b.product.canonicalFamilyId}`, 'zh-Hans-CN'));
 
-  const compatible = ranked.filter((entry) => isCoreCompatible(categoryId, entry.product, answers));
+  const compatible = uniqueBy(
+    ranked.filter((entry) => isCoreCompatible(categoryId, entry.product, answers)),
+    (entry) => entry.product.canonicalFamilyId
+  );
   if (!compatible.length) {
     return {
       exactEnough: false,
-      intro: '当前目录里没有守住你核心使用场景的产品。建议先调整条件或到线下确认，不为凑数推荐不适用的型号。',
+      intro: '当前目录里没有同时符合这些核心筛选条件的产品。建议调整条件或到线下确认，页面不会加入不适用的型号补足数量。',
       items: [],
       updatedAt: CATALOG_UPDATED_AT
     };
@@ -227,6 +268,15 @@ export function recommendProductLadder(categoryId, answers = {}, result = null) 
     && !first.product.fit.budget.includes(answers.budget)
   );
   const exactEnough = !budgetConflict && first.considered > 0 && first.matched >= Math.max(2, Math.ceil(first.considered * 0.7));
+  const verificationText = ({
+    helmet: '仍需连续试戴并核对具体型号合规信息。',
+    gloves: '仍需试戴并确认握把、刹车和腕部固定。',
+    armor: '仍需试穿并确认骑姿下护具位置与活动范围。',
+    boots: '仍需试穿并确认换挡、走路和脚踝支撑。',
+    luggage: '仍需核对车型支架、允许载荷和安装间隙。',
+    lights: '仍需安装后核验光型、电路与当地改装和使用要求。',
+    intercom: '仍需试装并实测压耳、操作、连接和麦克风。'
+  })[categoryId] || '仍需按真实使用条件核验。';
 
   const items = chosen.map((entry, index) => {
     const product = entry.product;
@@ -243,8 +293,8 @@ export function recommendProductLadder(categoryId, answers = {}, result = null) 
       ? (categoryId === 'theft'
           ? '这是当前风险下的核心方向，仍需与其他防护层和更安全的停车环境配合。'
           : budgetConflict
-            ? '当前目录没有同时满足该使用场景和预算的安全候选；不要为了压价降低核心保护。'
-            : exactEnough ? `匹配了${entry.matched}项核心条件，但仍需试戴/试穿/实测。` : `没有完全对应的成品，这是当前数据里最相近的一项。`)
+            ? '当前目录没有同时满足该使用场景和预算的候选；不建议为了压低价格放弃你选择的保护取向。'
+            : exactEnough ? `匹配了${entry.matched}项核心条件，${verificationText}` : `没有完全对应的成品，这是当前数据里最相近的一项。`)
       : categoryId === 'theft'
         ? '这是互补防护层，必须和机械阻碍、定位/报警及停车管理组合使用，不能单独替代完整方案。'
         : movedDown
@@ -262,10 +312,12 @@ export function recommendProductLadder(categoryId, answers = {}, result = null) 
 
   return {
     exactEnough,
-    intro: chosen.length < 3
-      ? `当前目录只有${chosen.length}项能守住你的核心场景，因此不补入不适用的产品凑数。`
+    intro: categoryId === 'theft'
+      ? '防盗手段不是互相替代的三选一。下面按当前风险列出需要组合的防护层，并优先建议更安全的停车环境。'
+      : chosen.length < 3
+      ? `当前目录只有${chosen.length}项符合核心筛选条件，因此不再加入不适用的产品补足数量。`
       : exactEnough
-        ? '下面不是唯一答案，而是按你的核心条件排出的三档相近方案。'
+        ? '下面不是唯一答案，而是按你的核心条件排出的几个相近候选。'
         : '没有一款能同时满足全部条件，下面只在不改变核心使用场景的前提下给出替代。',
     items,
     updatedAt: CATALOG_UPDATED_AT
@@ -292,9 +344,9 @@ export function popularProductsForCategory(categoryId, limit = 10) {
       if ((confidenceOrder[b.confidence] || 0) !== (confidenceOrder[a.confidence] || 0)) {
         return (confidenceOrder[b.confidence] || 0) - (confidenceOrder[a.confidence] || 0);
       }
-      return (b.popularityScore || 0) - (a.popularityScore || 0);
+      return `${a.brand}|${a.model}|${a.id}`.localeCompare(`${b.brand}|${b.model}|${b.id}`, 'zh-Hans-CN');
     })
-  , (product) => `${product.brand}`.trim().toLowerCase() + '|' + `${product.model}`.trim().toLowerCase())
+  , (product) => product.canonicalFamilyId)
     .slice(0, limit);
 }
 
