@@ -9,7 +9,8 @@ test('头盔入门预算包含赛羽候选与低价提醒', () => {
     usage: 'city', fit: 'unknown', priority: 'weight', style: 'stealth', budget: 'entry'
   });
   assert.match(result.brandHints.join(' '), /赛羽/);
-  assert.equal(result.priceWarning, '穷哥们预算紧，可以先看赛羽这类入门方向，但太便宜的不建议。先保证合头、合规、扣具和镜片，再谈碳纤维、K数和花色。');
+  assert.match(result.priceWarning, /预算在1000元以内.*赛羽.*不建议只追求最低价/);
+  assert.doesNotMatch(result.priceWarning, /穷哥们|太便宜/);
   assert.match(result.budgetAdvice, /现行 GB 811-2022/);
   assert.deepEqual(result.referenceLinks.map((item) => item.label), [
     '赛羽 SCOYCO 官方品牌信息',

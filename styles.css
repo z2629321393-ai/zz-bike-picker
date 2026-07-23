@@ -213,7 +213,7 @@ button:focus-visible,input:focus-visible{outline:3px solid rgba(255,150,84,.55);
 
 /* V6.1：入口先选项目，每次只运行一个测试 */
 .intro-choice-view{grid-template-columns:minmax(0,1.28fr) minmax(300px,.72fr);align-items:start;gap:44px;padding-top:34px}
-.intro-choice-copy h1{font-size:clamp(44px,5.7vw,82px);max-width:920px}
+.intro-choice-copy h1{font-size:clamp(42px,5.2vw,76px);max-width:920px}
 .entry-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:28px}
 .entry-card{position:relative;display:grid;grid-template-columns:52px minmax(0,1fr);gap:13px;align-items:center;min-height:112px;padding:16px 16px 35px;text-align:left;border:1px solid rgba(16,27,44,.12);border-radius:22px;background:rgba(255,255,255,.88);color:var(--ink);box-shadow:0 10px 28px rgba(16,27,44,.08);cursor:pointer;transition:.18s ease}
 .entry-card:hover{transform:translateY(-2px);border-color:#ffb77c;box-shadow:0 18px 38px rgba(16,27,44,.12)}
@@ -240,7 +240,8 @@ button:focus-visible,input:focus-visible{outline:3px solid rgba(255,150,84,.55);
   .entry-grid{grid-template-columns:1fr}
   .entry-card-main{grid-column:auto}
   .entry-card{min-height:108px}
-  .intro-choice-copy h1{font-size:45px}
+  .intro-choice-copy h1{font-size:38px}
+  .intro-choice-copy h1 em{font-size:.66em}
 }
 
 /* V6.2：图片、公开来源与电商比价入口 */
@@ -295,4 +296,51 @@ button:focus-visible,input:focus-visible{outline:3px solid rgba(255,150,84,.55);
   .market-info-grid{grid-template-columns:1fr}
   .market-link-row>*{flex:1;min-width:110px}
   .vehicle-source-actions>*{flex:1}
+}
+
+/* V6.4：自然标题层级与装备候选目录 */
+.intro-choice-copy h1 em{display:inline-block;margin-top:8px;font-size:.72em;line-height:1.08;max-width:900px}
+.product-ladder-panel,.hotlist-panel{margin-top:18px;padding:22px;border-radius:26px;background:#fff;border:1px solid var(--line);box-shadow:0 16px 40px rgba(19,42,72,.08)}
+.product-ladder-head,.hotlist-head{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:end;margin-bottom:16px}
+.product-ladder-head h3,.hotlist-head h3{margin:7px 0 0;font-size:24px;line-height:1.35;color:var(--navy)}
+.product-ladder-head p{margin:0;padding:14px 16px;border-radius:16px;background:#fff7e8;color:#7a4a12;line-height:1.7;font-size:14px;border:1px solid #f4d39e}
+.product-ladder-grid{display:grid;gap:14px}
+.product-ladder-card{display:grid;grid-template-columns:180px 1fr;gap:18px;border:1px solid var(--line);border-radius:22px;padding:14px;background:linear-gradient(135deg,#fff 0%,#f7fbff 100%)}
+.product-ladder-card.rank-1{border-color:#f1ad62;box-shadow:0 12px 30px rgba(238,143,62,.12)}
+.product-ladder-visual{position:relative;min-height:170px;border-radius:18px;overflow:hidden;background:#eaf1f8;display:grid;place-items:center}
+.product-ladder-visual img{width:100%;height:100%;object-fit:cover}
+.product-ladder-visual span{position:absolute;left:10px;top:10px;padding:7px 10px;border-radius:999px;background:rgba(17,42,73,.9);color:#fff;font-size:12px;font-weight:800}
+.product-ladder-copy{min-width:0}
+.product-ladder-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.product-ladder-top small{color:#728094;font-size:12px}
+.product-ladder-top h4{margin:5px 0 0;color:var(--navy);font-size:21px;line-height:1.35}
+.product-ladder-top strong{white-space:nowrap;background:#fff0dd;color:#a55616;padding:8px 11px;border-radius:999px;font-size:13px}
+.product-ladder-copy p{margin:9px 0;color:#526174;line-height:1.65;font-size:14px}
+.product-ladder-relax{padding:10px 12px;border-left:4px solid var(--orange);background:#fff8ed;border-radius:10px}
+.product-ladder-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.product-ladder-links a,.product-ladder-links button{border:0;border-radius:999px;padding:9px 12px;background:#edf4fb;color:var(--navy);font-size:12px;font-weight:800;text-decoration:none;cursor:pointer}
+.product-ladder-links a:first-child{background:var(--navy);color:#fff}
+.product-ladder-disclaimer{margin:14px 0 0;color:#7b8797;font-size:12px;line-height:1.65}
+.product-ladder-empty{padding:18px;border-radius:16px;background:#f6f8fb;color:#667085}
+.hotlist-head p{margin:0;padding:14px 16px;border-radius:16px;background:#f5f8fc;color:#5f6f83;line-height:1.7;font-size:14px;border:1px solid var(--line)}
+.hotlist-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.hotlist-card{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:12px;align-items:start;padding:14px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(135deg,#fff 0%,#f7fbff 100%)}
+.hotlist-rank{width:40px;height:40px;border-radius:14px;background:var(--navy);color:#fff;display:grid;place-items:center;font-weight:900}
+.hotlist-main small{color:#718096;font-size:11px;line-height:1.5}
+.hotlist-main h4{margin:4px 0 5px;color:var(--navy);font-size:16px;line-height:1.35}
+.hotlist-main p{margin:0;color:#607086;font-size:12px;line-height:1.55}
+.hotlist-price{padding:7px 9px;border-radius:999px;background:#fff0dd;color:#a55616;font-size:11px;font-weight:800;white-space:nowrap}
+.hotlist-actions{grid-column:2/4;display:flex;flex-wrap:wrap;gap:7px}
+.hotlist-actions a,.hotlist-actions button{border:0;border-radius:999px;padding:7px 10px;background:#edf4fb;color:var(--navy);font-size:11px;font-weight:800;text-decoration:none;cursor:pointer}
+.hotlist-empty{padding:18px;border-radius:16px;background:#f6f8fb;color:#667085}
+
+@media(max-width:760px){
+  .product-ladder-head,.hotlist-head{grid-template-columns:1fr}
+  .product-ladder-card{grid-template-columns:1fr}
+  .product-ladder-visual{min-height:210px}
+  .product-ladder-top{flex-direction:column}
+  .product-ladder-top strong{white-space:normal}
+  .hotlist-grid{grid-template-columns:1fr}
+  .hotlist-card{grid-template-columns:42px minmax(0,1fr)}
+  .hotlist-price,.hotlist-actions{grid-column:2}
 }

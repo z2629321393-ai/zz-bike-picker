@@ -1,6 +1,6 @@
-export const APP_VERSION = '6.2.0';
-export const DATA_VERSION = '2026-07-22';
-export const STORAGE_KEY = 'zz-bike-picker-v6.2';
+export const APP_VERSION = '6.4.0';
+export const DATA_VERSION = '2026-07-23';
+export const STORAGE_KEY = 'zz-bike-picker-v6.4';
 
 export const TYPE_LABELS = {
   scooter: {
@@ -78,7 +78,7 @@ export const LABELS = {
     commute: '通勤代步',
     fun: '周末玩乐',
     travel: '摩旅长途',
-    status: '撑场面/拍视频',
+    status: '外观/镜头表现',
     track: '跑山赛道',
     collect: '收藏情怀'
   },
@@ -152,7 +152,7 @@ export const QUESTIONS = [
       { value: 'commute', icon: '城', label: '通勤代步', detail: '每天骑，省心、好停、好挪最重要' },
       { value: 'fun', icon: '玩', label: '周末玩乐', detail: '平时不开，周末出去找情绪价值' },
       { value: 'travel', icon: '旅', label: '摩旅长途', detail: '续航、坐姿、装载和烂路能力' },
-      { value: 'status', icon: '镜', label: '撑场面/拍视频', detail: '体量、外观、声浪和镜头表现' },
+      { value: 'status', icon: '镜', label: '外观/镜头表现', detail: '重视体量、质感、声浪和画面效果' },
       { value: 'track', icon: '弯', label: '跑山/赛道', detail: '操控、刹车、轮胎和动力反馈' },
       { value: 'collect', icon: '藏', label: '收藏情怀', detail: '不一定常骑，故事和稀缺性更重要' }
     ]
@@ -160,9 +160,9 @@ export const QUESTIONS = [
   {
     id: 'budget',
     section: '预算边界',
-    eyebrow: '先看钱包',
-    title: '不贷款硬撑，你能接受的落地预算是多少？',
-    help: '按“买车+保险+第一轮必要装备/小改”的总预算选，不要只填裸车价。',
+    eyebrow: '确定预算边界',
+    title: '在不影响日常现金流的前提下，你能接受多少落地预算？',
+    help: '请按“买车、保险、第一轮必要装备和实用小改”的总预算选择，不要只看裸车价。',
     type: 'single',
     options: [
       { value: 8000, icon: '¥', label: '8000以内', detail: '二手工具车、小排通勤' },
@@ -176,8 +176,8 @@ export const QUESTIONS = [
   {
     id: 'body',
     section: '人车比例',
-    eyebrow: '硬性门槛',
-    title: '先看你能不能把车撑住、挪动、骑得协调。',
+    eyebrow: '人车适配',
+    title: '你的身高和体重是多少？',
     help: '座高只是一个数字，腿长、体重、车宽和重心同样重要。这里先做初筛，最终必须试坐。',
     type: 'body'
   },
@@ -203,12 +203,12 @@ export const QUESTIONS = [
     help: '不要选“正确答案”，选你真正会掏钱的那一个。',
     type: 'single',
     options: [
-      { value: 'practical', icon: '稳', label: '别天天修就行', detail: '可靠、售后、保值比参数更重要' },
+      { value: 'practical', icon: '稳', label: '可靠省心更重要', detail: '可靠、售后、保值比参数更重要' },
       { value: 'stable', icon: '安', label: '稳重和安全感', detail: '坐姿、制动、电子辅助要踏实' },
-      { value: 'show', icon: '帅', label: '帅能抵一半缺点', detail: '外观、质感、回头率优先' },
-      { value: 'aggressive', icon: '冲', label: '必须有拉扯感', detail: '动力、操控和声浪不能无聊' },
-      { value: 'freedom', icon: '远', label: '路不能限制我', detail: '烂路、长途、装载都要兼顾' },
-      { value: 'minimal', icon: '简', label: '原厂够硬就别折腾', detail: '不追复杂配置，也不想长期改装' }
+      { value: 'show', icon: '型', label: '外观和质感优先', detail: '愿意为造型、做工和镜头表现付费' },
+      { value: 'aggressive', icon: '冲', label: '喜欢直接的动力反馈', detail: '加速、操控和声浪都要有参与感' },
+      { value: 'freedom', icon: '远', label: '想探索更多路况', detail: '长途、装载和复杂路面都要兼顾' },
+      { value: 'minimal', icon: '简', label: '原厂完整就够用', detail: '不追复杂配置，也不想长期改装' }
     ]
   },
   {
@@ -223,22 +223,22 @@ export const QUESTIONS = [
     id: 'style',
     section: '外观与改装',
     eyebrow: '情绪价值',
-    title: '你对“好看”和“改装”的执念有多重？',
+    title: '外观和改装在你的选择里有多重要？',
     help: '改装不只花钱，还可能带来噪音、年检、匹配和可靠性问题。',
     type: 'style'
   },
   {
     id: 'power',
     section: '动力反馈',
-    eyebrow: '别被排量绑架',
+    eyebrow: '确认动力需求',
     title: '你真正需要的动力，是哪一种？',
     help: '动力越大，轮胎、刹车、油耗、保险和犯错成本都会一起变大。',
     type: 'single',
     options: [
       { value: 'low', icon: '轻', label: '够用就行', detail: '城市跟车轻松，维护压力低' },
-      { value: 'mid', icon: '中', label: '中等动力', detail: '超车不憋屈，日常也能控制' },
-      { value: 'high', icon: '快', label: '要明显刺激', detail: '加速和出弯要有拉扯感' },
-      { value: 'extreme', icon: '猛', label: '越暴躁越好', detail: '愿意为极端体验接受代价' }
+      { value: 'mid', icon: '中', label: '中等动力', detail: '超车有余量，日常也容易控制' },
+      { value: 'high', icon: '快', label: '希望加速反馈明显', detail: '加速和出弯都要有清晰的动力感' },
+      { value: 'extreme', icon: '猛', label: '追求高性能体验', detail: '愿意为更强性能承担相应成本和风险' }
     ]
   },
   {
@@ -275,8 +275,8 @@ export const QUESTIONS = [
     id: 'avoid',
     section: '最后排雷',
     eyebrow: '一票否决',
-    title: '下面哪些问题，会让你买回来直接后悔？',
-    help: '可以多选。没有明显雷区也可以直接看结果。',
+    title: '下面哪些问题是你明确不能接受的？',
+    help: '可以多选；如果没有明显禁区，也可以直接查看结果。',
     type: 'multi'
   }
 ];

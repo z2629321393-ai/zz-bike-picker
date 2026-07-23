@@ -330,7 +330,7 @@ export function analyzeConflicts(answers, primary) {
 
 export function buildAvoidAdvice(answers, primary) {
   const list = [];
-  if (answers.height <= 165) list.push('高座拉力和重心偏高的大ADV：先别被外观带走，低速失误成本高。');
+  if (answers.height <= 165) list.push('高座拉力和重心偏高的大ADV：需优先评估撑地、挪车和低速掉头。');
   if (answers.height >= 188) list.push('迷你复古、小踏板和小轮径玩乐车：除非你明确接受“骑上去显小”。');
   if (answers.ownership === 'low') list.push('进口大排、冷门小众和高价覆盖件仿赛：摔一次、等一次件，成本都不低。');
   if (answers.maintenance === 'low') list.push('高压榨性能车、老车和重改车：它们需要持续维护，不是买完就结束。');
@@ -363,7 +363,7 @@ export function buildDecisionProfile(answers, primary, secondary) {
 
   if (answers.looks === 'high' || answers.looks === 'unique') tradeoffs.push('外观越极端，实用性和摔车件成本越可能妥协');
   if (answers.mod === 'heavy') tradeoffs.push('重度改装会增加匹配、合法性、可靠性和转手难度');
-  if (answers.power === 'extreme') tradeoffs.push('动力越暴躁，轮胎、刹车、油耗和犯错成本越高');
+  if (answers.power === 'extreme') tradeoffs.push('动力越强，对轮胎、制动、油耗和操作准确性的要求越高');
   if (primary === 'adv') tradeoffs.push('通过性和装载换来更高座高、更大体量和更重低速负担');
   if (primary === 'cruiser') tradeoffs.push('姿态和气场换来转弯半径、车重和低速灵活性的损失');
 
@@ -382,14 +382,14 @@ export function buildDecisionProfile(answers, primary, secondary) {
 
 export function buildCopyText({ answers, primary, secondary, recommendations, conflicts }) {
   const lines = [
-    '【骑不快的ZZ｜性格选车访谈】',
+    '【骑不快的ZZ｜选车需求测试】',
     `我的结果：${TYPE_LABELS[primary].name}`,
     `第二倾向：${TYPE_LABELS[secondary].short}`,
     `核心用途：${labelFor('usage', answers.usage)}`,
     `预算：${budgetLabel(answers.budget)}｜身高体重：${answers.height}cm / ${answers.weight}kg`,
     `经验：${labelFor('experience', answers.experience)}｜停车：${labelFor('parking', answers.parking)}`,
     '',
-    `ZZ判断：${TYPE_LABELS[primary].desc}`,
+    `建议方向：${TYPE_LABELS[primary].desc}`,
     '',
     '优先试坐：'
   ];
@@ -404,9 +404,9 @@ export function buildCopyText({ answers, primary, secondary, recommendations, co
 
   lines.push('', '现实提醒：');
   if (conflicts.length) conflicts.slice(0, 2).forEach((text) => lines.push(`- ${text}`));
-  else lines.push('- 你的主要答案没有明显打架，下一步重点是试坐、当地落地价和售后。');
+  else lines.push('- 你的主要条件没有明显冲突，下一步重点是试坐、当地落地价和售后。');
 
-  lines.push('', '别只问别人哪台车最好。先问自己买回来到底是通勤、撑场面、摩旅、收藏，还是单纯想爽。用途不清楚，越贵越容易后悔。');
+  lines.push('', '没有适合所有人的“最好车型”。先确认真实用途、预算和使用成本，再去比较具体型号；需求越清楚，越不容易买错。');
   return lines.join('\n');
 }
 

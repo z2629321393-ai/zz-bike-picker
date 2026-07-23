@@ -1,20 +1,22 @@
-export const ACCESSORY_STORAGE_KEY = 'zz-bike-picker-v6.2-accessories';
+import { recommendProductLadder } from './product-catalog.js';
+
+export const ACCESSORY_STORAGE_KEY = 'zz-bike-picker-v6.4-accessories';
 
 export const REMINDER_CONFIG = {
   promoImage: 'assets/extension-promo.png',
-  promoTitle: '先看一张提醒，再开始单项测试',
-  promoText: '你选哪一项，就只进入哪一项测试；完成后直接看结果，不要求把其他项目全部做完。',
-  spokenLine: '后续如果想买头套、蓝牙耳机或其他骑行装备，可以去我抖音“骑不快的ZZ”的橱窗看看，顺手支持一下。这里只是提醒，不跳链接，也不要求购买；先按测试结果选，别为了支持买不合适的。'
+  promoTitle: '开始前，先确认一件事',
+  promoText: '这次只回答你所选项目的问题，完成后就能查看建议；其他装备可以以后再测。',
+  spokenLine: '如果想看看我整理的头套、蓝牙耳机或其他骑行装备，也可以到抖音“骑不快的ZZ”的橱窗作参考。先按自己的使用场景选，合适再买。'
 };
 
 const q = (id, title, help, options) => ({ id, title, help, options });
 
 export const ACCESSORY_CATEGORIES = [
   {
-    id: 'helmet', icon: '盔', title: '如何选头盔', accent: '安全核心',
-    subtitle: '头型、气动、风噪、重量和外观一起权衡，不能只看壳体材料。',
+    id: 'helmet', icon: '盔', title: '帮我选头盔', accent: '安全核心',
+    subtitle: '先看头型与佩戴，再比较通风、风噪、重量和预算。',
     questions: [
-      q('usage', '你80%的头盔使用场景？', '按最常用场景选，不按一年只发生一两次的极限情况选。', [
+      q('usage', '你平时最常在哪种场景骑行？', '按大多数时候的真实用途选择，不用为一年只有一两次的极端场景买单。', [
         ['city', '城市通勤', '频繁穿脱、低速、短途，便利与通风更重要'],
         ['touring', '长途摩旅', '连续佩戴、高速风噪、颈部负担更重要'],
         ['sport', '跑山/运动骑行', '高速稳定、贴合和上方视野更重要'],
@@ -26,7 +28,7 @@ export const ACCESSORY_CATEGORIES = [
         ['neutral', '中性头型', '主流盔型选择面较广'],
         ['long', '偏长头', '容易压前额或后脑']
       ]),
-      q('priority', '你最不能忍受什么？', '只能先选一个主矛盾。', [
+      q('priority', '你最想优先改善哪一点？', '先选择对你日常体验影响最大的一项。', [
         ['noise', '风噪大', '长途耳朵累、注意力下降'],
         ['weight', '头盔重', '颈部容易酸，频繁回头负担大'],
         ['heat', '闷热', '夏天穿戴率低'],
@@ -38,7 +40,7 @@ export const ACCESSORY_CATEGORIES = [
         ['retro', '复古圆润', '适合复古/巡航，但注意视野和气动'],
         ['premium', '精致材质感', '关注漆面、接缝、内衬与整体比例']
       ]),
-      q('budget', '头盔预算？', '预算要给试戴、镜片、防雾片和耗材留余量。', [
+      q('budget', '你准备为头盔投入多少预算？', '记得给试戴、镜片、防雾片和后续耗材留出余量。', [
         ['entry', '1000以内', '先保合规、合头、扣具可靠'],
         ['mid', '1000—2500', '兼顾重量、通风、内衬和外观'],
         ['high', '2500—5000', '更看重气动、舒适和长期使用细节'],
@@ -47,8 +49,8 @@ export const ACCESSORY_CATEGORIES = [
     ]
   },
   {
-    id: 'gloves', icon: '套', title: '如何选手套', accent: '手感与保护',
-    subtitle: '赛道级不一定更舒服；保护、握持感、磨合和美观必须拆开看。',
+    id: 'gloves', icon: '套', title: '帮我选手套', accent: '手感与保护',
+    subtitle: '按通勤、跑山、旅行或赛道选择，保护和手感一起看。',
     questions: [
       q('usage', '你主要在哪种强度下骑？', '跑山和赛道不是一个级别，别为了“看起来专业”买过头。', [
         ['city', '城市通勤', '频繁穿脱、低速操作、手机和舒适优先'],
@@ -56,7 +58,7 @@ export const ACCESSORY_CATEGORIES = [
         ['mountain', '跑山/街道运动', '要保护，也要保留刹车和油门细腻感'],
         ['track', '赛道', '高速摔车风险、长护腕、掌根滑块和固定优先']
       ]),
-      q('protection', '你准备买哪种级别？', '越赛道化，通常越紧、越硬、越需要磨合。', [
+      q('protection', '你更偏向哪种保护取向？', '越偏赛道，通常越紧、越硬，也越需要磨合。', [
         ['urban', '轻量通勤型', '短护腕、薄掌心、舒服，但覆盖和固定有限'],
         ['roadSport', '街道运动型', '中/长护腕，保护和手感比较均衡'],
         ['touring', '旅行防护型', '全天舒适、防风防水，但膜层会损失一点手感'],
@@ -83,8 +85,8 @@ export const ACCESSORY_CATEGORIES = [
     ]
   },
   {
-    id: 'armor', icon: '甲', title: '如何选护具/骑行服', accent: '穿戴率与覆盖',
-    subtitle: '保护等级、耐磨、透气、日常美观和穿脱成本共同决定你会不会真的穿。',
+    id: 'armor', icon: '甲', title: '帮我选骑行服/护具', accent: '穿戴率与覆盖',
+    subtitle: '气候、穿戴频率、耐磨与护具固定，决定你会不会真的穿。',
     questions: [
       q('usage', '主要骑行场景？', '按80%的真实使用选。', [
         ['commute', '城市通勤', '快穿脱、透气、日常外观'],
@@ -98,7 +100,7 @@ export const ACCESSORY_CATEGORIES = [
         ['rain', '雨水多', '分层防水和快干'],
         ['cold', '低温多', '防风、保暖和内层管理']
       ]),
-      q('wearing', '你能接受多麻烦？', '穿戴率是安全配置的一部分。', [
+      q('wearing', '你能接受多复杂的穿戴流程？', '真正愿意每次穿上，才算有效的安全装备。', [
         ['fast', '1分钟内', '护甲衬衣/轻量骑行服'],
         ['normal', '3—5分钟', '完整骑行服+骑行裤'],
         ['full', '愿意完整穿戴', '高覆盖皮衣/组合护具'],
@@ -110,7 +112,7 @@ export const ACCESSORY_CATEGORIES = [
         ['adv', '摩旅机能', '口袋、模块化、ADV风格'],
         ['leather', '皮衣质感', '复古/巡航/运动都能做，但更热更重']
       ]),
-      q('priority', '你更怕哪种代价？', '选你最难接受的。', [
+      q('priority', '你最不愿接受哪种问题？', '请选择最容易让你放弃穿戴的一项。', [
         ['heat', '太热不想穿', '优先透气和轻量'],
         ['move', '护具跑位', '优先贴合和调节'],
         ['ugly', '穿起来太臃肿', '重视版型和隐藏式护具'],
@@ -119,8 +121,8 @@ export const ACCESSORY_CATEGORIES = [
     ]
   },
   {
-    id: 'boots', icon: '靴', title: '如何选骑行靴', accent: '脚踝与操控',
-    subtitle: '赛道靴保护高，但走路、换挡和日常搭配都可能更难受。',
+    id: 'boots', icon: '靴', title: '帮我选骑行靴', accent: '脚踝与操控',
+    subtitle: '在脚踝保护、换挡脚感、防水和步行之间找平衡。',
     questions: [
       q('usage', '主要场景？', '通勤、摩旅、跑山、赛道和越野是不同鞋。', [
         ['city', '城市通勤', '走路、穿脱和日常外观'],
@@ -155,8 +157,8 @@ export const ACCESSORY_CATEGORIES = [
     ]
   },
   {
-    id: 'luggage', icon: '箱', title: '三箱/尾箱怎么选', accent: '重心与美观',
-    subtitle: '容量、支架、宽度、风阻、重心和整车比例必须一起算。',
+    id: 'luggage', icon: '箱', title: '帮我选尾箱/箱包', accent: '重心与美观',
+    subtitle: '从用途、容量、支架承载和重心入手，别只看能装多少。',
     questions: [
       q('usage', '装载目的？', '通勤放头盔和长途露营不是同一套方案。', [
         ['commute', '通勤收纳', '头盔、雨衣、电脑'],
@@ -176,7 +178,7 @@ export const ACCESSORY_CATEGORIES = [
         ['mixed', '铺装+烂路', '支架可靠和减震'],
         ['offroad', '非铺装多', '软包、低重心和可变形更友好']
       ]),
-      q('volume', '真实容量需求？', '别按“万一用得到”买长期空箱。', [
+      q('volume', '你实际需要多大容量？', '按经常携带的东西来选，不要为“万一用得到”长期背着空箱。', [
         ['small', '只放一顶头盔', '小尾箱/尾包'],
         ['medium', '1—2天', '中等尾箱或双软包'],
         ['large', '多日摩旅', '分体装载'],
@@ -191,10 +193,10 @@ export const ACCESSORY_CATEGORIES = [
     ]
   },
   {
-    id: 'lights', icon: '灯', title: '射灯怎么选', accent: '光型与电路',
-    subtitle: '亮度、截止线、电路负载、安装位置和整车外观必须一起看。',
+    id: 'lights', icon: '灯', title: '帮我选辅助灯', accent: '光型与电路',
+    subtitle: '先判断铺路、远射还是雨雾，再核对光型、电路和当地要求。',
     questions: [
-      q('usage', '为什么装射灯？', '目的不同，光型不同。', [
+      q('usage', '你安装辅助灯的主要目的是什么？', '用途不同，需要的光型和安装方式也不同。', [
         ['city', '城市提高存在感', '低亮度、规范光型'],
         ['touring', '夜间长途', '近场铺路+远场补充'],
         ['fog', '雨雾天气', '低位宽光、减少反射'],
@@ -227,8 +229,8 @@ export const ACCESSORY_CATEGORIES = [
     ]
   },
   {
-    id: 'intercom', icon: '音', title: '摩托车耳机怎么选', accent: '连接与佩戴',
-    subtitle: '连接稳定、耳槽舒适、操作和机身外观，比参数表上的“顶级音质”更现实。',
+    id: 'intercom', icon: '音', title: '帮我选头盔耳机', accent: '连接与佩戴',
+    subtitle: '单人导航、双人对讲和多人组队，是三种不同需求。',
     questions: [
       q('group', '最常见通话人数？', '单人、双人和多人组网需求完全不同。', [
         ['solo', '单人', '导航、电话、音乐'],
@@ -263,8 +265,8 @@ export const ACCESSORY_CATEGORIES = [
     ]
   },
   {
-    id: 'theft', icon: '锁', title: '防盗/盗抢保障怎么选', accent: '风险分层',
-    subtitle: '锁具、定位、停车、便利和隐蔽性一起做，不存在一把万能锁。',
+    id: 'theft', icon: '锁', title: '制定防盗方案', accent: '风险分层',
+    subtitle: '按停车环境和车辆价值组合机械锁、定位、报警与保障。',
     questions: [
       q('parking', '最常见停车环境？', '按最差场景设计。', [
         ['indoor', '封闭室内', '风险较低，仍需基础锁和钥匙管理'],
@@ -272,13 +274,13 @@ export const ACCESSORY_CATEGORIES = [
         ['outdoor', '露天公共区域', '机械锁+定位+报警+停车选择'],
         ['uncertain', '经常临停', '便携、多层、缩短无人看管时间']
       ]),
-      q('value', '整车+改装投入？', '防盗投入要匹配潜在损失。', [
+      q('value', '整车和改装大约投入多少？', '防盗投入应与可能承担的损失相匹配。', [
         ['low', '1.5万以内', '基础锁+定位'],
         ['mid', '1.5—4万', '双层机械+定位'],
         ['high', '4—8万', '多层防护和保障条款'],
         ['premium', '8万以上', '停车环境和保障优先级更高']
       ]),
-      q('anchor', '能锁固定物吗？', '只锁车轮，不能阻止整车被抬走。', [
+      q('anchor', '停车时通常能连接固定物吗？', '只锁车轮，仍然无法阻止整车被抬走。', [
         ['yes', '经常可以', '链条/U锁连接固定物'],
         ['sometimes', '偶尔可以', '便携组合方案'],
         ['no', '不能', '更依赖定位、报警和停车管理'],
@@ -319,10 +321,12 @@ export function evaluateAccessory(categoryId, answers = {}, vehicleResult = null
   const evaluators = { helmet: evaluateHelmet, gloves: evaluateGloves, armor: evaluateArmor, boots: evaluateBoots, luggage: evaluateLuggage, lights: evaluateLights, intercom: evaluateIntercom, theft: evaluateTheft };
   const result = evaluators[categoryId]?.(answers, vehicleResult);
   if (!result) throw new Error(`Unknown accessory category: ${categoryId}`);
+  const productLadder = recommendProductLadder(categoryId, answers, result);
   return {
     categoryId,
     ...result,
     ...buildAccessoryMarketProfile(categoryId, answers, result),
+    productLadder,
     spokenLine: REMINDER_CONFIG.spokenLine
   };
 }
@@ -334,22 +338,28 @@ export function accessoryResultCopy(category, result) {
     '', result.summary,
     '', `真实使用感：${result.feelNote}`,
     `外观建议：${result.styleNote}`,
-    '', '你要接受的代价：', ...result.tradeoffs.map((item) => `- ${item}`),
+    '', '需要接受的取舍：', ...result.tradeoffs.map((item) => `- ${item}`),
     '', '优先看：', ...result.priorities.map((item) => `- ${item}`),
-    '', '不要这样买：', ...result.avoid.map((item) => `- ${item}`),
-    '', '下单前核对：', ...result.checklist.map((item) => `- ${item}`),
+    '', '常见误区：', ...result.avoid.map((item) => `- ${item}`),
+    '', '购买前核对：', ...result.checklist.map((item) => `- ${item}`),
     '', `预算建议：${result.budgetAdvice}`,
     '品牌/产品方向：', ...result.brandHints.map((item) => `- ${item}`),
     `价格提醒：${result.priceWarning}`,
-    '电商搜索词：', ...result.searchKeywords.map((item) => `- ${item}`),
-    '', `顺便念一句：${result.spokenLine}`
+    '平台搜索词：', ...result.searchKeywords.map((item) => `- ${item}`),
+    '', '三档候选：',
+    ...(result.productLadder?.items || []).flatMap((entry) => [
+      `${entry.rank}. ${entry.label}：${entry.product.brand} ${entry.product.model}（${entry.product.priceBand}）`,
+      `   ${entry.whyRelaxed}`,
+      `   取舍：${entry.product.compromise}`
+    ]),
+    '', `购买渠道提醒：${result.spokenLine}`
   ].join('\n');
 }
 
 function baseResult(headline, summary, metrics) {
   return {
     headline, summary, metrics,
-    feelNote: '实际手感要靠试穿、试戴或安装后验证，参数表只能筛方向。',
+    feelNote: '实际感受仍要靠试穿、试戴或安装后验证，参数只能帮助你先筛选方向。',
     styleNote: '外观应和车型、骑行服及日常穿搭协调，但不能压过安全、合身和可用性。',
     tradeoffs: [], priorities: [], avoid: [], checklist: []
   };
@@ -400,10 +410,10 @@ function evaluateGloves(a) {
   const urban = a.protection === 'urban' || a.usage === 'city';
 
   if (race) {
-    r.headline = '赛道长护腕手套：保护拉满，但舒适和低速握持感要让步';
+    r.headline = '赛道长护腕手套：优先强化保护，舒适和低速握持感需要让步';
     r.summary = '赛道级手套通常有更强的掌根滑块、长护腕、腕骨固定、小指联动和厚实皮料。它适合高速摔车风险，不代表日常最好戴。';
     r.metrics = metricSet({ 防护: 98, 舒适: 48, 握持感: 58, 通风: 62, 美观: 94 });
-    r.feelNote = '刚戴时容易出现明显的“握屎感”：掌心厚、预弯紧、滑块和护壳让你觉得隔着东西抓油门。正确尺码和磨合会改善，但不可能像薄通勤手套那么轻松。';
+    r.feelNote = '刚戴时会有明显的厚重和隔离感：掌心较厚、预弯较紧，滑块与护壳也会限制手指活动。正确尺码和磨合会改善，但不会像薄通勤手套那样直接。';
     r.tradeoffs.push('保护更强，但穿脱慢、夏天热、低速操作和手机使用更差', '皮料和预弯不合手时，刹车点和油门细腻感会明显下降');
     r.priorities.push('优先试赛道预弯是否和你的手掌宽度、指长匹配', '接受至少数次磨合，但不能靠忍受麻木或压痛来磨合');
     r.avoid.push('只为了赛车外观，日常通勤也买最硬最厚的赛道手套');
@@ -411,7 +421,7 @@ function evaluateGloves(a) {
     r.headline = '街道运动手套：比纯赛道舒服，保护和抓握更适合跑山';
     r.summary = '这类手套保留长护腕、掌根防护和较好的腕部固定，但皮料、预弯和护壳没有纯赛道那么极端，跑山和街道激烈骑行更容易长期使用。';
     r.metrics = metricSet({ 防护: 86, 舒适: 76, 握持感: 82, 通风: 72, 美观: 90 });
-    r.feelNote = '比赛道手套更贴近日常握把手感，不会那么明显“握屎”；仍有保护结构，但离合、刹车和油门细节更容易感知。';
+    r.feelNote = '比赛道手套更贴近日常握把手感，厚重的隔离感更少；仍保留保护结构，也更容易感知离合、刹车和油门细节。';
     r.tradeoffs.push('保护上限不如纯赛道手套，但实际穿戴率和操作感通常更高');
   } else if (touring) {
     r.headline = '旅行长护腕手套：全天舒适和防风防雨优先';
@@ -422,14 +432,14 @@ function evaluateGloves(a) {
   } else if (urban) {
     r.headline = '轻量城市手套：最舒服、手感最好，但保护边界要说清楚';
     r.metrics = metricSet({ 防护: 58, 舒适: 94, 握持感: 94, 通风: 88, 美观: 80 });
-    r.feelNote = '薄掌心、柔软织物或软皮会让油门和刹车手感最好，几乎没有“握屎感”；代价是护腕短、固定和耐磨上限较低。';
+    r.feelNote = '薄掌心、柔软织物或软皮会让油门和刹车反馈更直接；代价是护腕短，固定和耐磨上限较低。';
     r.tradeoffs.push('舒服、灵活、适合通勤，但不适合承担高速跑山或赛道风险');
   }
 
   if (a.feel === 'thin' && race) r.tradeoffs.unshift('你的手感要求和赛道级结构冲突，优先考虑街道运动型而不是纯赛道型');
   if (a.feel === 'protectFirst') r.priorities.push('允许更厚更紧，但必须保留清晰刹车操作，不能靠用更大力补偿');
   if (a.feel === 'breakin') r.checklist.push('磨合后应变贴手；若持续麻、顶指或虎口拉扯，说明不是磨合问题而是版型不合');
-  if (a.season === 'cold') r.tradeoffs.push('保暖层会明显增加厚度和“握屎感”，必要时考虑加热手把分担保暖任务');
+  if (a.season === 'cold') r.tradeoffs.push('保暖层会明显增加厚度并降低握把反馈，必要时可用加热手把分担保暖任务');
   if (a.season === 'rain') r.priorities.push('湿手抓握、防水膜固定和袖口防灌水比触屏更重要');
   r.styleNote = styleGloves(a.style, race);
   return finalize(r);
@@ -496,7 +506,7 @@ function evaluateBoots(a) {
 }
 
 function evaluateLuggage(a, vehicleResult) {
-  const r = baseResult('中等容量快拆尾箱/尾包：先解决真实收纳，不让车尾变成搬家车', '装载系统会改变重心、风阻、车宽、后避震和整车比例。容量越大不一定越实用。', metricSet({ 容量: 70, 稳定性: 82, 便利: 86, 耐用: 76, 外观协调: 82 }));
+  const r = baseResult('中等容量快拆尾箱/尾包：先解决真实收纳，同时控制车尾重心', '装载系统会改变重心、风阻、车宽、后避震和整车比例。容量越大不一定越实用。', metricSet({ 容量: 70, 稳定性: 82, 便利: 86, 耐用: 76, 外观协调: 82 }));
   r.priorities.push('查原车后货架和副车架允许载荷', '重物低、靠前、左右平衡，尾箱尽量放轻物', '满载后重测胎压、后避震和制动距离');
   r.avoid.push('只按升数买最大三箱', '忽略箱体自重和支架重量', '把大尾箱当后座长期受力靠背');
   r.checklist.push('锁扣、防水、支架螺丝和防松措施', '高速前先低速测试摆动和转向变化', '边箱不干涉排气、后座脚和转向');
@@ -550,7 +560,7 @@ function evaluateLights(a) {
     r.tradeoffs.push('有截止的近场灯最适合日常，但极远距离照明不如远射灯');
   }
   if (a.electric === 'unknown') r.priorities.unshift('先测原车发电余量和电瓶状态，再谈功率');
-  if (a.control === 'smart') r.tradeoffs.push('智能调光好玩，但控制器、兼容和故障排查更复杂');
+  if (a.control === 'smart') r.tradeoffs.push('智能调光更方便，但控制器、兼容和故障排查也更复杂');
   r.styleNote = styleLights(a.look);
   return finalize(r);
 }
@@ -561,14 +571,14 @@ function evaluateIntercom(a) {
   r.avoid.push('只看最大连接人数', '扬声器压耳后靠调大音量解决', '机身太大破坏头盔气动和外观');
   r.checklist.push('戴头盔30分钟耳朵不痛', '充电口、防水、续航和底座可靠', '主要功能不需要频繁看手机');
   if (a.group === 'pair') {
-    r.headline = '稳定双人对讲：固定搭档连接、回声和麦克风清晰优先';
+    r.headline = '稳定双人对讲：先看连接、麦克风和盲操作';
     r.metrics = metricSet({ 对讲稳定: 90, 音乐: 72, 佩戴舒适: 84, 操作便利: 84, 外观协调: 82 });
   } else if (a.group === 'small') {
     r.headline = '小车队组网：重连和统一生态，比理论距离更重要';
     r.metrics = metricSet({ 对讲稳定: 92, 音乐: 66, 佩戴舒适: 78, 操作便利: 72, 外观协调: 72 });
     r.tradeoffs.push('多人组网机身和操作通常更复杂，音乐不是第一优先');
   } else if (a.group === 'large') {
-    r.headline = '多人车队组网型：稳定组网最高，价格、体积和操作复杂度也最高';
+    r.headline = '多人车队组网：稳定重连与统一生态优先';
     r.metrics = metricSet({ 对讲稳定: 98, 音乐: 64, 佩戴舒适: 70, 操作便利: 58, 外观协调: 65 });
     r.tradeoffs.push('人数越多越依赖统一设备和流程，机身更大、续航和成本更高');
   }
@@ -640,7 +650,7 @@ function helmetMarket(a, result) {
   const base = {
     budgetAdvice: '预算必须给试戴、替换镜片、防雾片和耳塞留余量；先买合头的正规全盔，再谈轻量和涂装。',
     brandHints: ['赛羽：预算紧时可列入入门候选，优先看符合现行标准、尺码和头型合适的具体型号。', '其他正规品牌：按头型、扣具、镜片耗材、售后和试戴感受横向比较，不按品牌名直接判安全。'],
-    priceWarning: '穷哥们预算紧，可以先看赛羽这类入门方向，但太便宜的不建议。先保证合头、合规、扣具和镜片，再谈碳纤维、K数和花色。',
+    priceWarning: '预算在1000元以内时，可以把赛羽等入门型号列入候选，但不建议只追求最低价。先确认合头、符合现行标准、扣具和镜片，再比较材料与涂装。',
     searchKeywords: ['赛羽 摩托车全盔 GB 811-2022', '摩托车全盔 试戴 头型', '摩托车头盔 防雾片 双D扣'],
     referenceLinks: [
       { label: '赛羽 SCOYCO 官方品牌信息', url: 'https://www.scoyco.com/' },
@@ -738,7 +748,7 @@ function theftMarket(a) {
 function styleHelmet(v) {
   return ({
     stealth: '低调纯色最容易和不同车型、骑行服长期搭配，也更耐看。',
-    race: '赛车涂装视觉最强，但要看车身主色、骑行服和镜片颜色，避免整套颜色互相打架。',
+    race: '赛车涂装视觉最强，但要看车身主色、骑行服和镜片颜色，让整套配色保持协调。',
     retro: '复古外形适合复古/巡航，但不要为了圆润造型接受过窄视野或差气动。',
     premium: '精致感来自漆面、接缝、内衬、镜片和比例，不是只看碳纤维纹路。'
   })[v] || '优先选择和车型、骑行服协调且长期耐看的配色。';
@@ -746,7 +756,7 @@ function styleHelmet(v) {
 function styleGloves(v, race) {
   const base = ({
     stealth: '低调黑色最耐搭，也不会让通勤装备看起来过于用力。',
-    race: '赛车色和长护腕最有视觉冲击，但纯赛道结构会同步带来更紧、更硬和更强“握屎感”。',
+    race: '赛车色和长护腕最有视觉冲击，但纯赛道结构也会带来更紧、更硬和更明显的握把隔离感。',
     retro: '复古皮手套和巡航/复古车协调，但必须补齐掌根耐磨和腕部固定。',
     match: '按车身和骑行服配色能提升整体感，但尺码、掌宽和手感优先级更高。'
   })[v] || '外观可以匹配车和骑行服，但不要让夸张护壳替代真实保护。';

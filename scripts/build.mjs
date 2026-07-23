@@ -13,6 +13,8 @@ const publicSrcFiles = [
   'engine.js',
   'marketplace.js',
   'poster.js',
+  'product-catalog-expanded.js',
+  'product-catalog.js',
   'storage.js',
   'vehicles.generated.js'
 ];

@@ -35,8 +35,10 @@ import {
   saveAccessorySession
 } from './accessories.js';
 import { isAggregateVehicle, marketplaceLinks, motofanLinks, safeGearImage, safeImage } from './marketplace.js';
+import { CATALOG_UPDATED_AT, popularProductsForCategory, productCatalogStats } from './product-catalog.js';
 
 const VEHICLES = mergeAndNormalizeVehicles(BASE_VEHICLES, MOTOFAN_VEHICLES);
+const PRODUCT_STATS = productCatalogStats();
 let state = createInitialState();
 let currentResult = null;
 let autoAdvanceTimer = null;
@@ -98,7 +100,10 @@ const els = {
   accessoryBrandHints: document.getElementById('accessoryBrandHints'),
   accessoryPriceWarning: document.getElementById('accessoryPriceWarning'),
   accessorySearchKeywords: document.getElementById('accessorySearchKeywords'),
-  accessoryMarketLinks: document.getElementById('accessoryMarketLinks')
+  accessoryMarketLinks: document.getElementById('accessoryMarketLinks'),
+  accessoryProductIntro: document.getElementById('accessoryProductIntro'),
+  accessoryProductLadder: document.getElementById('accessoryProductLadder'),
+  accessoryHotlist: document.getElementById('accessoryHotlist')
 };
 
 init();
@@ -319,7 +324,7 @@ function showView(name) {
 function renderQuestion() {
   const question = QUESTIONS[state.current];
   const progress = Math.round(((state.current + 1) / QUESTIONS.length) * 100);
-  els.stepLabel.textContent = `第${state.current + 1}轮 / 共${QUESTIONS.length}轮`;
+  els.stepLabel.textContent = `第 ${state.current + 1} 题 / 共 ${QUESTIONS.length} 题`;
   els.sectionLabel.textContent = question.section;
   els.progressNumber.textContent = `${progress}%`;
   els.progressBar.style.width = `${progress}%`;
@@ -428,7 +433,7 @@ function renderMulti() {
       <span class="option-key">${index + 1}</span>
     </button>
   `).join('')}</div>
-  <div class="multi-note"><span>没有明显雷区也可以直接生成结果。</span><b>已选 ${state.answers.avoid.length} 项</b></div>`;
+  <div class="multi-note"><span>没有明确不能接受的问题，也可以直接生成结果。</span><b>已选 ${state.answers.avoid.length} 项</b></div>`;
 }
 
 function controlCard(key, title, description, options) {
@@ -453,7 +458,7 @@ function updateBodyLive() {
 
 function bodyFitText(height, weight) {
   if (height >= 188) return { title: '优先大车架', desc: '小踏板和迷你复古容易显小。重点试ADV、大车架街车和中大型巡航。' };
-  if (height >= 180) return { title: '注意视觉比例', desc: '不是不能骑小车，但镜头里容易像骑玩具。试坐时看膝角和上身比例。' };
+  if (height >= 180) return { title: '注意人车比例', desc: '小尺寸车型未必不适合，但要重点确认膝部空间、上身姿态和长时间舒适度。' };
   if (height <= 160) return { title: '座高是硬门槛', desc: '优先低座、窄坐垫和轻车。高座拉力必须实际试撑地和低速掉头。' };
   if (height <= 168) return { title: '先控座高和车重', desc: '多数街车和踏板可选，ADV要看坐垫宽度，不要只看座高参数。' };
   if (weight >= 100) return { title: '车架与避震要够用', desc: '过小过轻的车可能显得局促，带人时更要看后避震和制动余量。' };
@@ -463,18 +468,18 @@ function bodyFitText(height, weight) {
 function getHostSpeech(id) {
   const answers = state.answers;
   const speeches = {
-    usage: '先别说品牌。<br>我得先知道这台车到底替你干什么。<small>同一台车，通勤和跑山的评价可以完全相反。</small>',
-    budget: `预算先卡死。<br>不然后面所有推荐都是空谈。<small>当前暂定：${budgetLabel(answers.budget)}</small>`,
-    body: `${answers.height >= 180 ? '你这个身高，车不能只看座高，还得看体量。' : answers.height <= 165 ? '你这里先不谈帅，能稳稳撑住才是第一步。' : '你的身高适配面不窄，后面主要看用途。'}<small>${answers.height}cm / ${answers.weight}kg，先做视觉和控车初筛。</small>`,
-    experience: '经验不是面子。<br>它决定你犯错以后还有多少余量。<small>新手更需要线性、ABS和可控车重。</small>',
-    personality: '这一题最容易装。<br>别选别人觉得理性的，选你真会掏钱的。<small>买车动机不诚实，推荐一定会歪。</small>',
-    cost: '很多人买车只看首付。<br>真正劝退人的，是第二年以后。<small>轮胎、保险、摔车件和折旧都算持有成本。</small>',
-    style: '外观党没问题。<br>问题是你愿不愿意为好看付出代价。<small>姿态、排气、避震不是装上去就结束。</small>',
-    power: '排量不是面子分。<br>动力越大，犯错成本越大。<small>我更关心你在哪里用，而不是你能买多大。</small>',
+    usage: '先确认最常见的用途。<br>同一台车在通勤、跑山和长途里的表现可能完全不同。<small>以大多数时候的真实使用为准。</small>',
+    budget: `先确定总预算边界。<br>后面的建议都会在这个范围内权衡。<small>当前选择：${budgetLabel(answers.budget)}</small>`,
+    body: `${answers.height >= 180 ? '除了座高，也要看车身空间和整体比例。' : answers.height <= 165 ? '先确认双脚支撑、挪车和低速掉头是否有把握。' : '你的身高适配范围较广，后面主要看用途和车重。'}<small>${answers.height}cm / ${answers.weight}kg，用于初步判断人车适配。</small>`,
+    experience: '经验会影响安全余量。<br>越容易控制、反馈越线性的车，越适合建立稳定习惯。<small>新手优先考虑 ABS、可控车重和温和动力。</small>',
+    personality: '选最接近你真实想法的答案。<br>没有标准答案，真实偏好才能得到有用建议。<small>外观、性能和省心都可以是合理的购车动机。</small>',
+    cost: '落地价只是开始。<br>长期持有成本同样会影响使用体验。<small>轮胎、保险、维修、摔车件和折旧都要一起考虑。</small>',
+    style: '喜欢好看的车很正常。<br>同时也要把改装成本、合规和可靠性算进去。<small>姿态、排气和避震都会影响后续使用。</small>',
+    power: '动力需求要和使用场景匹配。<br>动力越强，对控制和维护的要求也越高。<small>重点是日常是否真正用得到。</small>',
     roadload: '空车试骑和满载摩旅，<br>基本是两台不同的车。<small>载人、尾箱和烂路都会改变重心。</small>',
     commuteParking: '停车环境也在替你选车。<br>露天临停和室内车位，不是同一种持有难度。<small>防盗、剐蹭、日晒和挪车都要算。</small>',
-    age: '老车不一定便宜。<br>便宜的车价，可能换来昂贵的时间。<small>手续、车况、配件和维修师傅缺一不可。</small>',
-    avoid: '最后不问你喜欢什么。<br>我问你什么东西绝对忍不了。<small>排除法通常比“猜你喜欢”更准确。</small>'
+    age: '老车的购入价可能不高，<br>但检查、维修和找配件都需要额外时间。<small>手续、车况、配件和维修渠道缺一不可。</small>',
+    avoid: '最后确认你明确不能接受的问题。<br>把禁区说清楚，能更快排除不合适的方向。<small>排除法往往比只看喜欢什么更可靠。</small>'
   };
   return speeches[id] || '';
 }
@@ -492,13 +497,13 @@ function updateProfileChips() {
   if (answers.age === 'collector') chips.push('收藏模式');
   els.profileChips.innerHTML = chips.length
     ? chips.slice(0, 8).map((chip) => `<span>${escapeHtml(chip)}</span>`).join('')
-    : '<span class="empty-chip">回答后实时更新</span>';
+    : '<span class="empty-chip">随回答实时更新</span>';
 }
 
 function nextQuestion(auto = false) {
   const question = QUESTIONS[state.current];
   if (!isQuestionComplete(question)) {
-    if (!auto) showToast('先回答这一题');
+    if (!auto) showToast('请选择一个答案后继续');
     return;
   }
 
@@ -537,15 +542,13 @@ function buildResult() {
   const avoidAdvice = buildAvoidAdvice(answers, ranking.primary);
   const clarity = calculateClarity(ranking.sortedTypes, conflicts, ranking.recommendations.length);
   const decisionProfile = buildDecisionProfile(answers, ranking.primary, ranking.secondary);
-  const copyText = `${buildCopyText({
+  const copyText = buildCopyText({
     answers,
     primary: ranking.primary,
     secondary: ranking.secondary,
     recommendations: ranking.recommendations,
     conflicts
-  })}
-
-顺便念一句：${REMINDER_CONFIG.spokenLine}`;
+  });
 
   currentResult = {
     answers,
@@ -721,29 +724,26 @@ async function openPoster() {
 }
 
 function openDataInfo() {
-  const quality = VEHICLES.reduce((accumulator, vehicle) => {
-    accumulator[vehicle.dataQuality] = (accumulator[vehicle.dataQuality] || 0) + 1;
-    return accumulator;
-  }, {});
   els.dataModalContent.innerHTML = `
     <div class="data-stats">
-      <div class="data-stat"><strong>${VEHICLES.length}</strong><span>当前可用车型记录</span></div>
-      <div class="data-stat"><strong>${MOTOFAN_VEHICLES.length}</strong><span>公开页生成记录</span></div>
-      <div class="data-stat"><strong>${quality.verified || 0}</strong><span>已校准记录</span></div>
+      <div class="data-stat"><strong>${VEHICLES.length}</strong><span>车型方向记录</span></div>
+      <div class="data-stat"><strong>${PRODUCT_STATS.total}</strong><span>装备候选记录</span></div>
+      <div class="data-stat"><strong>${PRODUCT_STATS.recommendable}</strong><span>当前参与装备匹配</span></div>
+      <div class="data-stat"><strong>${PRODUCT_STATS.withMarketSignal}</strong><span>带公开平台快照</span></div>
     </div>
-    <div class="modal-section"><h4>数据原则</h4><div class="modal-list">
-      <div>推荐引擎与车型数据分离。换数据不需要重写访谈逻辑。</div>
-      <div>基础示例库只保证网站能演示，不假装是完整全网数据库。</div>
-      <div>公开页记录会显示可信度；缺少座高、车重、年款时会主动提示。</div>
-      <div>版本：App ${APP_VERSION}｜数据口径 ${DATA_VERSION}</div>
+    <div class="modal-section"><h4>推荐逻辑与数据来源分开维护</h4><div class="modal-list">
+      <div>车型库用于筛选适合方向，不承诺覆盖国内全部在售车型；国内购买状态会单独标注。</div>
+      <div>装备目录覆盖八个类别。只有带日期和来源的记录才会显示“公开平台快照”，其余只是常见候选，不冒充销量排名。</div>
+      <div>目录含 ${PRODUCT_STATS.byRecordType.exact || 0} 条具体型号、${PRODUCT_STATS.byRecordType.series || 0} 条系列、${PRODUCT_STATS.byRecordType.direction || 0} 条选购方向和 ${PRODUCT_STATS.byRecordType.bundle || 0} 条组合方案；目录行数不等于独立在售SKU数。</div>
+      <div>公开页记录会显示可信度；缺少座高、车重、年款或渠道信息时会明确提醒核验。</div>
+      <div>版本：App ${APP_VERSION}｜车型数据 ${DATA_VERSION}｜装备目录 ${CATALOG_UPDATED_AT}</div>
     </div></div>
   `;
   els.dataModal.showModal();
 }
 
 function updateDataPill() {
-  const generated = MOTOFAN_VEHICLES.length;
-  els.dataPill.textContent = generated ? `车型库 ${VEHICLES.length} 条 · 公开页${generated}` : `车型库 ${VEHICLES.length} 条 · 示例模式`;
+  els.dataPill.textContent = `车型方向 ${VEHICLES.length} 条 · 装备候选 ${PRODUCT_STATS.total} 条`;
 }
 
 
@@ -752,8 +752,8 @@ function renderEntryChoices() {
   const motorcycleCard = `
     <button class="entry-card entry-card-main" type="button" data-entry-category="motorcycle">
       <span class="entry-card-icon">车</span>
-      <span class="entry-card-copy"><b>摩托车选择推荐</b><small>12轮访谈：用途、预算、身高、经验、成本和停车环境</small></span>
-      <span class="entry-card-status">开始选车 →</span>
+      <span class="entry-card-copy"><b>帮我选摩托车</b><small>12 道题梳理用途、预算、身高、经验、使用成本和停车环境</small></span>
+      <span class="entry-card-status">开始选车</span>
     </button>`;
   const gearCards = ACCESSORY_CATEGORIES.map((category) => {
     const completed = Boolean(accessorySession.resultsByCategory?.[category.id]);
@@ -761,7 +761,7 @@ function renderEntryChoices() {
       <button class="entry-card ${completed ? 'is-complete' : ''}" type="button" data-entry-category="${escapeHtml(category.id)}">
         <span class="entry-card-icon">${escapeHtml(category.icon)}</span>
         <span class="entry-card-copy"><b>${escapeHtml(category.title)}</b><small>${escapeHtml(category.subtitle)}</small></span>
-        <span class="entry-card-status">${completed ? '已测过 · 可重测' : '只测这一项 →'}</span>
+        <span class="entry-card-status">${completed ? '已完成 · 可重新测试' : '开始测试'}</span>
       </button>`;
   }).join('');
   els.entryGrid.innerHTML = motorcycleCard + gearCards;
@@ -769,12 +769,12 @@ function renderEntryChoices() {
 
 function applyReminderConfig(category = null) {
   if (els.promoImage) els.promoImage.src = REMINDER_CONFIG.promoImage;
-  const categoryName = category?.title?.replace('如何选', '') || '装备';
-  setText('promoTitle', category ? `先看一张提醒，再开始${categoryName}测试` : REMINDER_CONFIG.promoTitle);
-  setText('promoText', category ? `${category.subtitle}这一轮只做${categoryName}，不会要求你继续完成其他项目。` : REMINDER_CONFIG.promoText);
+  const categoryName = category?.title?.replace('帮我选', '') || '装备';
+  setText('promoTitle', category ? `准备开始${categoryName}测试` : REMINDER_CONFIG.promoTitle);
+  setText('promoText', category ? `${category.subtitle} 本轮只回答${categoryName}相关问题，完成后就能查看建议。` : REMINDER_CONFIG.promoText);
   setText('promoCtaText', REMINDER_CONFIG.spokenLine);
   setText('accessorySpokenLine', REMINDER_CONFIG.spokenLine);
-  if (els.promoContinueBtn) els.promoContinueBtn.textContent = category ? `下一步，开始${categoryName}测试 →` : '下一步，进入单项选择 →';
+  if (els.promoContinueBtn) els.promoContinueBtn.textContent = category ? `开始${categoryName}测试` : '选择要测试的项目';
 }
 
 function openPromo(next = 'hub') {
@@ -823,7 +823,7 @@ function resetAccessories() {
   accessorySession = createAccessorySession();
   currentAccessoryResult = null;
   renderAccessoryHub();
-  showToast('扩展包记录已重置');
+  showToast('装备测试记录已清空');
 }
 
 function startAccessory(categoryId) {
@@ -851,7 +851,7 @@ function renderAccessoryQuestion() {
   setText('accessorySideTitle', category.title);
   setText('accessorySideSubtitle', category.subtitle);
   els.accessoryProgressBar.style.width = `${progress}%`;
-  setText('accessoryProgressText', `第${accessorySession.currentQuestion + 1}题 / 共${category.questions.length}题`);
+  setText('accessoryProgressText', `第 ${accessorySession.currentQuestion + 1} 题 / 共 ${category.questions.length} 题`);
 
   els.accessoryQuestionCard.innerHTML = `
     <div class="question-eyebrow">${escapeHtml(category.title)}</div>
@@ -894,7 +894,7 @@ function nextAccessoryQuestion() {
   const question = category.questions[accessorySession.currentQuestion];
   const answers = accessorySession.answersByCategory[category.id] || {};
   if (!answers[question.id]) {
-    showToast('先回答这一题');
+    showToast('请选择一个答案后继续');
     return;
   }
   if (accessorySession.currentQuestion < category.questions.length - 1) {
@@ -914,7 +914,7 @@ function buildAccessoryResult(category) {
   accessorySession.resultsByCategory[category.id] = { answers, result, updatedAt: new Date().toISOString() };
   saveAccessorySession(accessorySession);
 
-  setText('accessoryResultKicker', `${category.title} · ZZ建议`);
+  setText('accessoryResultKicker', `${category.title.replace('帮我选', '')} · 你的建议`);
   setText('accessoryResultHeadline', result.headline);
   setText('accessoryResultSummary', result.summary);
   els.accessoryPriorities.innerHTML = renderAccessoryList(result.priorities);
@@ -926,6 +926,8 @@ function buildAccessoryResult(category) {
   setText('accessorySpokenLine', result.spokenLine);
   els.accessoryMetrics.innerHTML = renderAccessoryMetrics(result.metrics);
   renderAccessoryMarket(category, result);
+  renderAccessoryProductLadder(category, result.productLadder);
+  renderAccessoryHotlist(category);
   setText('accessoryCopyText', copyText);
   renderAccessoryHub();
   renderEntryChoices();
@@ -951,6 +953,88 @@ function renderAccessoryMarket(category, result) {
     const markets = links.map((item) => `<a class="market-link ${item.id === 'jd' ? 'primary' : ''}" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.label)}</a>`);
     els.accessoryMarketLinks.innerHTML = [...references, ...markets].join('');
   }
+}
+
+function renderAccessoryHotlist(category) {
+  if (!els.accessoryHotlist) return;
+  const products = popularProductsForCategory(category.id, 10);
+  if (!products.length) {
+    els.accessoryHotlist.innerHTML = '<article class="hotlist-empty">当前还没有可核验的同类候选。</article>';
+    return;
+  }
+
+  els.accessoryHotlist.innerHTML = products.map((product, index) => {
+    const signal = product.marketSignal;
+    const status = signal
+      ? `${signal.platform}公开快照 · ${signal.observedAt}`
+      : `目录候选 · 非销量排名`;
+    const description = signal?.signal || `已按${product.sourceType || '公开资料'}收录，当前没有单独的公开热卖快照。`;
+    const sourceUrl = safeProductUrl(signal?.sourceUrl || '');
+    const officialUrl = safeProductUrl(product.officialUrl || '');
+    const links = marketplaceLinks(product.searchKeyword || `${product.brand} ${product.model}`);
+    return `<article class="hotlist-card">
+      <div class="hotlist-rank">${String(index + 1).padStart(2, '0')}</div>
+      <div class="hotlist-main"><small>${escapeHtml(status)} · ${escapeHtml(recordTypeLabel(product.recordType))}</small><h4>${escapeHtml(product.brand)}｜${escapeHtml(product.model)}</h4><p>${escapeHtml(description)}</p><p><b>国内状态：</b>${escapeHtml(product.cnAvailability)}</p></div>
+      <div class="hotlist-price">${escapeHtml(product.priceBand || '价格待核验')}</div>
+      <div class="hotlist-actions">
+        ${sourceUrl ? `<a href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener noreferrer">查看快照来源</a>` : ''}
+        ${officialUrl ? `<a href="${escapeHtml(officialUrl)}" target="_blank" rel="noopener noreferrer">品牌资料</a>` : ''}
+        ${links.slice(0, 2).map((link) => `<a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)}</a>`).join('')}
+        <button type="button" data-copy-text="${escapeHtml(product.searchKeyword || `${product.brand} ${product.model}`)}">复制搜索词</button>
+      </div>
+    </article>`;
+  }).join('');
+}
+
+function renderAccessoryProductLadder(category, ladder) {
+  if (!els.accessoryProductLadder || !els.accessoryProductIntro) return;
+  const items = ladder?.items || [];
+  els.accessoryProductIntro.textContent = ladder?.intro || '当前没有足够可靠的相近产品数据。';
+  if (!items.length) {
+    els.accessoryProductLadder.innerHTML = '<article class="product-ladder-empty">暂时没有守住核心场景的可核验产品，请先按结构和使用条件筛选。</article>';
+    return;
+  }
+
+  const confidenceLabel = { high: '较高', medium: '中等', low: '较低' };
+  els.accessoryProductLadder.innerHTML = items.map((entry) => {
+    const product = entry.product;
+    const officialUrl = safeProductUrl(product.officialUrl || '');
+    const reviewUrl = safeProductUrl(product.reviewUrl || '');
+    const sources = [
+      officialUrl ? `<a href="${escapeHtml(officialUrl)}" target="_blank" rel="noopener noreferrer">品牌资料</a>` : '',
+      reviewUrl ? `<a href="${escapeHtml(reviewUrl)}" target="_blank" rel="noopener noreferrer">公开资料</a>` : ''
+    ].filter(Boolean).join('');
+    const marketLinks = (entry.marketLinks || []).map((link) => `<a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)}</a>`).join('');
+    return `<article class="product-ladder-card rank-${entry.rank}">
+      <div class="product-ladder-visual">
+        <img src="${escapeHtml(entry.image || safeGearImage(category.id, {}))}" alt="装备类别示意图（非${escapeHtml(product.brand)} ${escapeHtml(product.model)}实物）">
+        <span>${escapeHtml(entry.label)}</span>
+      </div>
+      <div class="product-ladder-copy">
+        <div class="product-ladder-top"><div><small>${escapeHtml(product.sourceType || '公开资料')} · ${escapeHtml(recordTypeLabel(product.recordType))} · 记录可信度${escapeHtml(confidenceLabel[product.confidence] || '待核验')}</small><h4>${escapeHtml(product.brand)}｜${escapeHtml(product.model)}</h4></div><strong>${escapeHtml(product.priceBand || '价格待核验')}</strong></div>
+        <p class="product-ladder-relax"><b>为什么排在这里：</b>${escapeHtml(entry.whyRelaxed)}</p>
+        <p><b>适合：</b>${escapeHtml(product.idealFor)}</p>
+        <p><b>国内状态：</b>${escapeHtml(product.cnAvailability)}</p>
+        ${product.complianceNote ? `<p><b>合规提醒：</b>${escapeHtml(product.complianceNote)}</p>` : ''}
+        <p><b>公开信息摘要：</b>${escapeHtml(product.reviewSummary)}</p>
+        <p><b>主要取舍：</b>${escapeHtml(product.compromise)}</p>
+        <div class="product-ladder-links">${sources}${marketLinks}<button type="button" data-copy-text="${escapeHtml(product.searchKeyword || `${product.brand} ${product.model}`)}">复制搜索词</button></div>
+      </div>
+    </article>`;
+  }).join('');
+}
+
+function safeProductUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' ? url.href : '';
+  } catch {
+    return '';
+  }
+}
+
+function recordTypeLabel(value) {
+  return ({ exact: '具体型号', series: '系列记录', direction: '选购方向', bundle: '组合方案' })[value] || '候选记录';
 }
 
 function renderAccessoryList(items) {
